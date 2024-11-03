@@ -21,14 +21,14 @@ EOF
 # Verification before any command
 echo -e "[${BLUE}INFO${RESET}] Start Verification:"
 if [[ $EUID -ne 0 ]]; then
-   echo -e "[${RED}FAILED${RESET}] This script must be run as root" 1>&2
+   echo -e "[${RED}FAILED${RESET}] This script must be run as root (sudo su)"
    exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run as root"
 echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
 
 if ! grep -q "Fedora" /etc/os-release; then
-    echo -e "[${RED}FAILED${RESET}] This script must be run on Fedora";
+    echo -e "[${RED}FAILED${RESET}] This script must be run on Fedora"
     exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
@@ -37,8 +37,18 @@ echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
 echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
 echo -e "[${BLUE}INFO${RESET}] Update Package"
 command dnf update -y
+if [ $? -eq 1 ]; then
+    echo -e "[${RED}FAILED${RESET}] Update Package"
+    exit 0
+fi
+echo -e "[${GREEN}OK${RESET}] Update Package"
 echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
 
+# Pam usb part
 echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
 command sh pam_usb/launch.sh
+if [ $? -eq 1 ]; then
+    echo -e "[${RED}FAILED${RESET}] Pam Usb"
+    exit 0
+fi
 echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
