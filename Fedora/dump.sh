@@ -19,19 +19,19 @@ echo -e "[${CYAN}UPDATE${RESET}] System is up to date"
 EOF
 
 # Verification before any command
-echo -e "[${BLUE}INFO${RESET}] Start Verification:"
+echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
 if [[ $EUID -ne 0 ]]; then
    echo -e "[${RED}FAILED${RESET}] This script must be run as root (sudo su)"
    exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run as root"
 echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
-
 if ! grep -q "Fedora" /etc/os-release; then
     echo -e "[${RED}FAILED${RESET}] This script must be run on Fedora"
     exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
+echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
 
 # Update of the actual package
 echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
