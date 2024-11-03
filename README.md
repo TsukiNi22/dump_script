@@ -20,6 +20,8 @@ make ARG="'vendor-id' 'device-id' 'cancel-vendor-id' 'cancel-device-ie'" FORCE="
 ```
 
 
+# Get Information
+
 Use the command (`lsusb`) to get the following information:
 ```
 Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
