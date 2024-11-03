@@ -4,6 +4,7 @@
 
 
 Go to the folder who correspond to your os
+
 Run the following command with root permission (`sudo su`):
 
 
