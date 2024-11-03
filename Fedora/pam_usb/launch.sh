@@ -40,11 +40,9 @@ fi
 echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb"
 
 echo -e "[${BLUE}INFO${RESET}] Setup Of Pam Usb System File"
-command cd pam_usb/
-command cp pam_usb.conf /etc/security/
-echo -e "[${GREEN}OK${RESET}] Pam Usb config file setup"
-command cp system-auth /etc/pam.d/
-echo -e "[${GREEN}OK${RESET}] Pam Usb system-auth"
-command cp password-auth /etc/pam.d/
-echo -e "[${GREEN}OK${RESET}] Pam Usb password-auth"
+command sh pam_usb/set-file.sh $1 $2 $3
+if [ $? -eq 1 ]; then
+    echo -e "[${RED}FAILED${RESET}] Setup Of Pam Usb System File"
+    exit 0
+fi
 echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb System File"

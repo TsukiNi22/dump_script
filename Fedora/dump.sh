@@ -33,6 +33,19 @@ if ! grep -q "Fedora" /etc/os-release; then
     exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo -e "[${RED}FAILED${RESET}] No usb ID have been precise"
+    echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
+    exit 0
+fi
+echo -e "[${GREEN}OK${RESET}] Usb vendor ID and device ID are given"
+DEVICE_INFO=$(lsusb | grep "$1:$2")
+if [ -z "$DEVICE_INFO" ]; then
+    echo -e "[${RED}FAILED${RESET}] Can't find a usb with Vendor ID $1 and Device ID $2"
+    echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
+    exit 1
+fi
+echo -e "[${GREEN}OK${RESET}] Usb have been found"
 echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
 
 # Update of the actual package
@@ -52,7 +65,7 @@ echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
 
 # Pam usb part
 echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
-command sh pam_usb/launch.sh
+command sh pam_usb/launch.sh $1 $2 $5
 if [ $? -eq 1 ]; then
     echo -e "[${RED}FAILED${RESET}] Pam Usb"
     echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
@@ -62,7 +75,7 @@ echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
 
 # Usb Lock part
 echo -e "------[${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}]------"
-command sh usb_lock_and_power_shutdown/launch.sh
+command sh usb_lock_and_power_shutdown/launch.sh $1 $2 $3 $4
 if [ $? -eq 1 ]; then
     echo -e "[${RED}FAILED${RESET}] Pam Usb"
     echo -e "------[${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}]------"
