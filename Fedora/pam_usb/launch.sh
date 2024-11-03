@@ -10,18 +10,17 @@ CYAN="\e[36m"
 RESET="\e[0m"
 
 echo -e "[${BLUE}INFO${RESET}] Download Package"
+echo -e "↓↓---[${CYAN}DOWLOADING${RESET}]---↓↓"
 command sh pam_usb/install-package.sh
+echo -e "↑↑---[${CYAN}DOWLOADING${RESET}]---↑↑"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 echo -e "[${BLUE}INFO${RESET}] Download Pam Usb"
+echo -e "↓↓---[${CYAN}DOWLOADING${RESET}]---↓↓"
 command sh pam_usb/install-pam_usb.sh
+echo -e "↑↑---[${CYAN}DOWLOADING${RESET}]---↑↑"
 echo -e "[${GREEN}OK${RESET}] Download Pam Usb"
 
 echo -e "[${BLUE}INFO${RESET}] Setup Of Pam Usb"
-if ! pamusb-conf --add-device Usb ; then
-    echo -e "[${RED}FAILED${RESET}] Of the command 'pamusb-conf --add-device Usb'"
-    exit 1
-fi
-
 #OUTPUT=$(command pamusb-conf --add-device Usb)
 if echo "$OUTPUT" | grep -q "No devices detected"; then
     echo -e "[${RED}INFO${RESET}] $OUTPUT"
