@@ -22,18 +22,23 @@ EOF
 echo -e "[${BLUE}INFO${RESET}] Start Verification:"
 if [[ $EUID -ne 0 ]]; then
    echo -e "[${RED}FAILED${RESET}] This script must be run as root" 1>&2
-   exit 1
+   exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run as root"
 echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
 
 if ! grep -q "Fedora" /etc/os-release; then
     echo -e "[${RED}FAILED${RESET}] This script must be run on Fedora";
-    exit 1
+    exit 0
 fi
 echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
 
 # Update of the actual package
 echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
-dnf update -y
+echo -e "[${BLUE}INFO${RESET}] Update Package"
+command dnf update -y
 echo -e "--------------[${CYAN}UPDATE${RESET}]--------------"
+
+echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
+command sh pam_usb/launch.sh
+echo -e "--------------[${CYAN}PAM-USB${RESET}]--------------"
