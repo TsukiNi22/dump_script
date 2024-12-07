@@ -10,7 +10,7 @@ Run the following command with root permission (`sudo su`):
 
 Clone the repository:
 ```sh
-git clone https://github.com/Epitech/coding-style-checker.git
+git clone https://github.com/TsukiNi22/dump-script.git
 ```
 
 
