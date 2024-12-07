@@ -9,10 +9,10 @@ MAGENTA="\e[35m"
 CYAN="\e[36m"
 RESET="\e[0m"
 
-echo -e "[${BLUE}INFO${RESET}] Setup Of The File"
-command cd usb_lock_and_power_shutdown/
-command cp 80-usb-lock.rules /etc/udev/rules.d/
-echo -e "[${GREEN}OK${RESET}] Usb Lock Rule"
-command cp usb-lock.sh /usr/local/bin/
-echo -e "[${GREEN}OK${RESET}] Usb Lock sh"
-echo -e "[${GREEN}OK${RESET}] Setup Of The File"
+echo -e "[${BLUE}INFO${RESET}] Setup Of Usb-Lock System File"
+command sh usb_lock_and_power_shutdown/set-file.sh $1 $2 $3 $4
+if [ $? -eq 1 ]; then
+    echo -e "[${RED}FAILED${RESET}] Setup Of Usb-Lock System File"
+    exit 0
+fi
+echo -e "[${GREEN}OK${RESET}] Setup Of Usb-Lock System File"

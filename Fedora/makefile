@@ -19,7 +19,7 @@ all: launch
 launch:
 	@echo -e "----------------------[${MAGENTA}START${RESET}]----------------------"
 	@echo -e "[${BLUE}INFO${RESET}] Start the dump.sh file..."
-	@\sh dump.sh $(ARG) $(FORCE) #vendor-id device-id cancel-vendor-id cancel-device-id
+	@\sh dump.sh $(ARG) $(FORCE) #vendor-id device-id cancel-vendor-id cancel-device-id // 
 	@echo -e "-----------------------[${MAGENTA}END${RESET}]-----------------------"
 
 .PHONY: all

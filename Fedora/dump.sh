@@ -82,3 +82,13 @@ if [ $? -eq 1 ]; then
     exit 0
 fi
 echo -e "------[${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}]------"
+
+# Take Screen part
+echo -e "------[${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}]------"
+command sh take_screen_of_intruder/launch.sh $1 $2
+if [ $? -eq 1 ]; then
+    echo -e "[${RED}FAILED${RESET}] Screen of intruder"
+    echo -e "------[${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}]------"
+    exit 0
+fi
+echo -e "------[${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}]------"
