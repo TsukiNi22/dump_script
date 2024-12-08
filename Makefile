@@ -1,6 +1,6 @@
 ##
-## EPITECH PROJECT, 2024
-## Fedora dump script
+## DUMP SCRIPT PROJECT, 2024
+## dump script (Fedora / Ubuntu)
 ## File description:
 ## Makefile to start sh script
 ##
@@ -23,7 +23,7 @@ export RESET=\033[0m
 #echo -e "[${MAGENTA}NOTE${RESET}] Please check the logs"
 #echo -e "[${CYAN}UPDATE${RESET}] System is up to date"
 
-OS := $(shell grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
+OS := $(shell \grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
 all: launch
 

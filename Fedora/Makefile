@@ -1,10 +1,3 @@
-##
-## EPITECH PROJECT, 2024
-## Fedora dump script
-## File description:
-## Makefile to start sh script
-##
-
 .SILENT:
 
 all: launch

@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# Color definition
-RED="\e[31m"
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[34m"
-MAGENTA="\e[35m"
-CYAN="\e[36m"
-RESET="\e[0m"
-
 command cd usb_lock_and_power_shutdown/
 
 if [ ! -z $3 ] && [ ! -z $4 ]; then

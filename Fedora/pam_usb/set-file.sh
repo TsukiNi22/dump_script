@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# Color definition
-RED="\e[31m"
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[34m"
-MAGENTA="\e[35m"
-CYAN="\e[36m"
-RESET="\e[0m"
-
 DEVICE_INFO=$(lsusb | grep "$1:$2")
 
 BUS=$(echo "$DEVICE_INFO" | awk '{print $2}')
