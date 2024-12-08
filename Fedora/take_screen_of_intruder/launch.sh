@@ -17,4 +17,4 @@ command systemctl daemon-reload
 command systemctl enable usb-capture.service
 command systemctl start usb-capture.service
 echo -e "[${GREEN}OK${RESET}] Start of the Usb-Capture service"
-echo -e "[${BLUE}INFO${RESET}] Setup Of Take Screen Of Intruder File"
+echo -e "[${GREEN}OK${RESET}] Setup Of Take Screen Of Intruder File"
