@@ -1,6 +1,6 @@
 # Dump Script for Fedora/Ubuntu
 
-### Script to automaticly set pam_usb / usb security / alias / git delivery / coding-style ...
+### Script to automaticly set pam_usb / usb security / alias / git delivery / c lib / ...
 
 
 Go to the folder who correspond to your os
