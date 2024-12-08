@@ -1,23 +1,5 @@
 #!/bin/bash
 
-# Color definition
-RED="\e[31m"
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[34m"
-MAGENTA="\e[35m"
-CYAN="\e[36m"
-RESET="\e[0m"
-
-<<EOF
-echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
-echo -e "[${RED}ERROR${RESET}] An error occurred"
-echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
-echo -e "[${BLUE}INFO${RESET}] Starting the process"
-echo -e "[${MAGENTA}NOTE${RESET}] Please check the logs"
-echo -e "[${CYAN}UPDATE${RESET}] System is up to date"
-EOF
-
 # Verification before any command
 echo -e "-----------[${CYAN}VERIFICATION${RESET}]-----------"
 if [[ $EUID -ne 0 ]]; then
