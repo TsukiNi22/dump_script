@@ -1,11 +1,8 @@
-# Dump Script for Fedora/Ubuntu
+# Dump Script for Fedora (for now)
 
-### Script to automaticly set pam_usb / usb security / alias / git delivery / c lib / ...
+### Script to automaticly set Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder / Dotfile / Package & App / Git
 
-
-Go to the folder who correspond to your os
-
-Run the following command with root permission (`sudo su`):
+![image](https://github.com/user-attachments/assets/397c929e-ab0b-4994-8f5c-cf8edadd4b42)
 
 
 Clone the repository:
@@ -14,13 +11,24 @@ git clone https://github.com/TsukiNi22/dump-script.git
 ```
 
 
-Launch the installation with your corresponding information (vendor-id, device-id, ...):
+Launch the installation:
 ```sh
-make ARG="'vendor-id' 'device-id' 'cancel-vendor-id' 'cancel-device-ie'" FORCE="'forced-uuid'"
+cd dump_script
+sudo make
 ```
 
+## Content of Dotfile and Package & App
 
-# Get Information
+### Dotfile
+`Neovim`, `Fastfetch`, `Zsh with Oh-My-Zsh`
+
+### Package
+`sl`, `csfml`, `binwalk`, `jhon-the-reaper`, `gibuster`, `hydra`
+
+### App
+`caido`, `vscode`, `qBittorent`, `vencord`, `sober`, `wireshark`, `Telegram`
+
+## Get Information about usb id (`vendor-id` / `device-id`)
 
 Use the command (`lsusb`) to get the following information:
 ```
@@ -33,14 +41,8 @@ Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 ```
 
 
-Here the vendor-id is (`ffff`)
+For the `USB Disk 2.0` the vendor-id is `ffff` and the device-id is `5678`
 
-Here the device-id is (`5678`)
+The `vendor-id` and the `device-id` is used in Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder
 
-
-The `vendor-id` and the `device-id` is for the usb used for the connection / lock and other
-
-The `cancel-vendor-id` and the `cancel-device-id` is for the usb used for cancel lock action and shutdown action of usb and power
-
-
-The `force-uuid` is when your usb can't detect by file sytem, you need to write by yourself the part
+The `cancel-vendor-id` and the `cancel-device-id` is used in Usb Lock & Power Shutdown to cancel the effect
