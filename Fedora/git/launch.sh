@@ -1,5 +1,7 @@
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install gum git ssh-keygen -y
+command dnf install gum git openssh -y
+command systemctl enable sshd
+command systemctl start sshd
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 
@@ -13,11 +15,11 @@ if [ $? -eq 1 ]; then
     exit 1
 fi
 
-command sh git/init.sh
+command sudo -u "$SUDO_USER" bash -c 'sh git/init.sh'
 echo -e "[${GREEN}OK${RESET}] Init github repository"
 
-command ssh-keygen -t ed25519 -C $email -f ~/.ssh/git
+command sudo -u "$SUDO_USER" bash -c 'ssh-keygen -t ed25519 -C $email -f ~/.ssh/git'
 echo -e "╔════ 🔻 [${CYAN}SHH-PUB${RESET}] 🔻 ════╗"
-command cat ~/.ssh/git.pub
+command sudo -u "$SUDO_USER" bash -c 'cat ~/.ssh/git.pub'
 echo -e "╚════ 🔺 [${CYAN}SHH-PUB${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Init ssh key"

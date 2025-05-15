@@ -54,7 +54,7 @@ echo -e "══════════════════ [${CYAN}UPDATE${
 
 echo -e "══════════════ [${CYAN}INITIALISATION${RESET}] ══════════════"
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install gum git ssh-keygen -y
+command dnf install gum -y
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 echo -e "══════════════ [${CYAN}INITIALISATION${RESET}] ══════════════"
