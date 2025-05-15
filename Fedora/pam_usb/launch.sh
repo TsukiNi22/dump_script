@@ -1,17 +1,18 @@
-#!/bin/bash
-
-echo -e "[${BLUE}INFO${RESET}] Download Package"
-echo -e "↓↓---[${CYAN}DOWLOADING${RESET}]---↓↓"
-command sh pam_usb/install-package.sh
-echo -e "↑↑---[${CYAN}DOWLOADING${RESET}]---↑↑"
+echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
+dnf install gcc make vim git python3 -y
+echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
-echo -e "[${BLUE}INFO${RESET}] Download Pam Usb"
-echo -e "↓↓---[${CYAN}DOWLOADING${RESET}]---↓↓"
-command sh pam_usb/install-pam_usb.sh
-echo -e "↑↑---[${CYAN}DOWLOADING${RESET}]---↑↑"
+echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PAM-USB${RESET}] 🔻 ════╗"
+command cd pam_usb/
+command rm -rf pam_usb/
+command git clone https://github.com/mcdope/pam_usb.git
+command make -C pam_usb/ > /dev/null
+command make -C pam_usb/ install > /dev/null
+command rm -rf pam_usb/
+command cd ..
+echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PAM-USB${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Pam Usb"
 
-echo -e "[${BLUE}INFO${RESET}] Setup Of Pam Usb"
 #OUTPUT=$(command pamusb-conf --add-device Usb)
 if echo "$OUTPUT" | grep -q "No devices detected"; then
     echo -e "[${RED}INFO${RESET}] $OUTPUT"
@@ -30,7 +31,6 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb"
 
-echo -e "[${BLUE}INFO${RESET}] Setup Of Pam Usb System File"
 command sh pam_usb/set-file.sh $1 $2 $3
 if [ $? -eq 1 ]; then
     echo -e "[${RED}FAILED${RESET}] Setup Of Pam Usb System File"

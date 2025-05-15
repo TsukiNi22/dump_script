@@ -1,5 +1,3 @@
-#!/bin/bash
-
 DEVICE_INFO=$(lsusb | grep "$1:$2")
 
 BUS=$(echo "$DEVICE_INFO" | awk '{print $2}')
@@ -26,7 +24,6 @@ fi
 
 command cd pam_usb/
 
-echo -e "[${BLUE}INFO${RESET}] Set of the file pam_usb.conf variable"
 command cp pam_usb.conf tmp_pam_usb.conf
 command sed -i "s/VENDOR_NAME/$VENDOR/g" "tmp_pam_usb.conf"
 command sed -i "s/MODEL_NAME/$MODEL/g" "tmp_pam_usb.conf"

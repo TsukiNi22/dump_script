@@ -29,15 +29,15 @@ all: launch
 
 launch: clean
 	if [ "$(OS)" = "fedora" ]; then \
-		\echo -e "----------------------[${MAGENTA}START-FEDORA-DUMP${RESET}]----------------------"; \
+		\echo -e "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[${MAGENTA}FEDORA-DUMP${RESET}]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻"; \
 		\echo -e "[${BLUE}INFO${RESET}] Start the dump on fedora..."; \
 		\make --no-print-directory -C Fedora ARG="$(ARG)" FORCE="$(FORCE)"; \
-		\echo -e "-----------------------[${MAGENTA}END-FEDORA-DUMP${RESET}]-----------------------"; \
+		\echo -e "🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺[${MAGENTA}FEDORA-DUMP${RESET}]🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺"; \
 	elif [ "$(OS)" = "ubuntu" ]; then \
-		\echo -e "----------------------[${MAGENTA}START-UBUNTU-DUMP${RESET}]----------------------"; \
+		\echo -e "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[${MAGENTA}UBUNTU-DUMP${RESET}]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻"; \
 		\echo -e "[${BLUE}INFO${RESET}] Start the dump on fedora..."; \
 		\make --no-print-directory -C Ubuntu ARG="$(ARG)" FORCE="$(FORCE)"; \
-		\echo -e "-----------------------[${MAGENTA}END-UBUNTU-DUMP${RESET}]-----------------------"; \
+		\echo -e "🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺[${MAGENTA}UBUNTU-DUMP${RESET}]🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺"; \
 	else \
 		echo -e "[${RED}ERROR${RESET}] Unsupported OS: $(OS)"; \
 		exit 1; \

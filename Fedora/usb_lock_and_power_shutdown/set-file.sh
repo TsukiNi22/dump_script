@@ -1,9 +1,6 @@
-#!/bin/bash
-
 command cd usb_lock_and_power_shutdown/
 
 if [ ! -z $3 ] && [ ! -z $4 ]; then
-    echo -e "[${BLUE}INFO${RESET}] Set of the file usb-lock.sh variable"
     command cp usb-lock.sh tmp_usb-lock.sh
     command sed -i "s/CANCEL_VENDOR_IDV/$3/g" "tmp_usb-lock.sh"
     command sed -i "s/CANCEL_DEVICE_IDV/$4/g" "tmp_usb-lock.sh"
@@ -15,7 +12,6 @@ else
     echo -e "[${YELLOW}WARNING${RESET}] Can't find a valid cancel usb (Cancel Usb: Not Setup)"
 fi
 
-echo -e "[${BLUE}INFO${RESET}] Set of the file 80-usb-lock.rules variable"
 command cp 80-usb-lock.rules tmp_80-usb-lock.rules
 command sed -i "s/VENDOR_IDV/$1/g" "tmp_80-usb-lock.rules"
 command sed -i "s/DEVICE_IDV/$2/g" "tmp_80-usb-lock.rules"
