@@ -62,12 +62,14 @@ echo -e "══════════════ [${CYAN}INITIALISATION${RESE
 MENU=("Pam Usb"
     "Usb Lock & Power Shutdown"
     "Screen Of Intruder"
-    "Environement"
+    "Dotfile"
+    "Package & App"
     "Git"
     "Quit")
 
 if [ -z "$vendor_id" ] || [ -z "$device_id" ] || [ -z "$DEVICE_INFO" ]; then
-    MENU=("Environement"
+    MENU=("Dotfile"
+        "Package & App"
         "Git"
         "Quit")
 fi
@@ -109,15 +111,26 @@ while true; do
             echo -e "═════════ [${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}] ══════════"
             ;;
 
-        "Environement")
-            echo -e "═══════════════ [${CYAN}ENVIRONEMENT${RESET}] ═══════════════"
-            #command sh environement/launch.sh
+        "Dotfile")
+            echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
+            command sh dotfile/launch.sh
             if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Environement"
-                echo -e "═══════════════ [${CYAN}ENVIRONEMENT${RESET}] ═══════════════"
+                echo -e "[${RED}FAILED${RESET}] Dotfile"
+                echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
                 exit 1
             fi
-            echo -e "═══════════════ [${CYAN}ENVIRONEMENT${RESET}] ═══════════════"
+            echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
+            ;;
+
+        "Package & App")
+            echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
+            command sh package_app/launch.sh
+            if [ $? -eq 1 ]; then
+                echo -e "[${RED}FAILED${RESET}] Package & App"
+                echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
+                exit 1
+            fi
+            echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
             ;;
 
         "Git")
