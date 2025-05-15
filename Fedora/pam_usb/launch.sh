@@ -31,9 +31,9 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb"
 
-command sh pam_usb/set-file.sh $1 $2 $3
+command sh pam_usb/set-file.sh $1 $2
 if [ $? -eq 1 ]; then
     echo -e "[${RED}FAILED${RESET}] Setup Of Pam Usb System File"
-    exit 0
+    exit 1
 fi
 echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb System File"

@@ -12,15 +12,12 @@ if [ ! -d "$USB_PATH" ]; then
     exit 1
 fi
 
-MODEL=$(cat "$USB_PATH/product" 2>/dev/null || echo "Inconnu")
-VENDOR=$(cat "$USB_PATH/manufacturer" 2>/dev/null || echo "Inconnu")
-SERIAL=$(cat "$USB_PATH/serial" 2>/dev/null || echo "Inconnu")
+MODEL=$(cat "$USB_PATH/product" 2>/dev/null || echo "'$USB_PATH/product' Inconnu")
+VENDOR=$(cat "$USB_PATH/manufacturer" 2>/dev/null || echo "'$USB_PATH/manufacturer' Inconnu")
+SERIAL=$(cat "$USB_PATH/serial" 2>/dev/null || echo "'$USB_PATH/serial' Inconnu")
 
-UUID="$3"
-if [ -z "$UUID" ]; then
-    DEVICE_BLOCK=$(lsblk -o SERIAL,UUID | grep -A 1 $SERIAL | tail -n 1 | sed "s/ //g")
-    UUID=$(echo "$DEVICE_BLOCK" 2>/dev/null || echo "UUID non trouvé")
-fi
+DEVICE_BLOCK=$(lsblk -o SERIAL,UUID | grep -A 1 $SERIAL | tail -n 1 | sed "s/ //g")
+UUID=$(echo "$DEVICE_BLOCK" 2>/dev/null || echo "Can't find usb uuid")
 
 command cd pam_usb/
 

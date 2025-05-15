@@ -6,7 +6,7 @@ echo -e "[${GREEN}OK${RESET}] Download Package"
 command sh take_screen_of_intruder/set-file.sh $1 $2
 if [ $? -eq 1 ]; then
     echo -e "[${RED}FAILED${RESET}] Setup Of Take Screen Of Intruder File"
-    exit 0
+    exit 1
 fi
 command systemctl daemon-reload
 command systemctl enable usb-capture.service
