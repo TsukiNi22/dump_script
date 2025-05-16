@@ -4,9 +4,9 @@ After=display-manager.service
 	
 [Service]
 ExecStart=/usr/local/bin/usb-capture-listener.sh
-User=mat
+User=WHOAMI
 Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/mat/.Xauthority
+Environment=XAUTHORITY=/home/WHOAMI/.Xauthority
 Restart=always
 
 [Install]

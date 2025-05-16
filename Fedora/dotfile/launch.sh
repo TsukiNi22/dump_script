@@ -26,16 +26,16 @@ echo -e "[${GREEN}OK${RESET}] Fastfetch config setup"
 
 command sudo -u "$SUDO_USER" bash -c 'command chsh -s $(which zsh)'
 if [ ! $? -eq 0 ]; then
-    echo -e "[${RED}FAILED${RESET}] Zsh to default shell"
-    exit 1
+    echo -e "[${RED}SKIPED${RESET}] Zsh to default shell"
+else
+    echo -e "[${GREEN}OK${RESET}] Zsh is now the default shell"
 fi
-echo -e "[${GREEN}OK${RESET}] Zsh is now the default shell"
 command sudo -u "$SUDO_USER" bash -c 'command cp dotfile/.zshrc ~/.zshrc'
 if [ ! $? -eq 0 ]; then
-    echo -e "[${RED}FAILED${RESET}] Zshrc setup"
-    exit 1
+    echo -e "[${RED}SKIPED${RESET}] Zshrc setup"
+else
+    echo -e "[${GREEN}OK${RESET}] Zshrc setup"
 fi
-echo -e "[${GREEN}OK${RESET}] Zshrc setup"
 command sudo -u "$SUDO_USER" bash -c 'command sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
 if [ ! $? -eq 0 ]; then
     echo -e "[${RED}SKIPED${RESET}] Oh-My-Zsh setup"

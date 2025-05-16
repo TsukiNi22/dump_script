@@ -17,3 +17,12 @@ command sed -i "s/WHOAMI/$SUDO_USER/g" "tmp_usb-capture.service"
 echo -e "[${GREEN}OK${RESET}] Set of the file usb-capture.service variable"
 command mv tmp_usb-capture.service usb-capture.service 
 echo -e "[${GREEN}OK${RESET}] Usb-Capture service setup"
+
+command systemctl daemon-reexec
+command systemctl daemon-reload
+echo -e "[${GREEN}OK${RESET}] Service reload"
+
+command restorecon -v /etc/systemd/system/usb-capture.service.service
+command systemctl enable usb-capture.service
+command systemctl start usb-capture.service
+echo -e "[${GREEN}OK${RESET}] Start of the Usb-Capture service"

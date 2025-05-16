@@ -28,6 +28,7 @@ OS := $(shell \grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
 all: launch
 
 launch: clean
+	clear
 	if [ "$(OS)" = "fedora" ]; then \
 		\echo -e "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[${MAGENTA}FEDORA-DUMP${RESET}]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻"; \
 		\echo -e "[${BLUE}INFO${RESET}] Start the dump on fedora..."; \

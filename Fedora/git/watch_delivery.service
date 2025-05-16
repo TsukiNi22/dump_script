@@ -1,0 +1,11 @@
+[Unit]
+Description=Surveille le répertoire ~/delivery et exécute des actions
+
+[Service]
+ExecStart=/usr/local/bin/watch_delivery.sh
+User=WHOAMI
+WorkingDirectory=/home/WHOAMI/delivery
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
