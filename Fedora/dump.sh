@@ -65,6 +65,7 @@ MENU=("Pam Usb"
     "Dotfile"
     "Package & App"
     "Git"
+    "Grub & Plymouth"
     "Quit")
 
 if [ -z "$vendor_id" ] || [ -z "$device_id" ] || [ -z "$DEVICE_INFO" ]; then
@@ -74,6 +75,7 @@ if [ -z "$vendor_id" ] || [ -z "$device_id" ] || [ -z "$DEVICE_INFO" ]; then
         "Dotfile"
         "Package & App"
         "Git"
+        "Grub & Plymouth"
         "Quit")
 fi
 
@@ -147,6 +149,17 @@ while true; do
             echo -e "═══════════════════ [${CYAN}GIT${RESET}] ════════════════════"
             ;;
 
+        "Grub & Plymouth")
+            echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
+            command sh grub_plymouth/launch.sh
+            if [ $? -eq 1 ]; then
+                echo -e "[${RED}FAILED${RESET}] Grub & Plymouth"
+                echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
+                exit 1
+            fi
+            echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
+            ;;
+            
         "Quit")
             echo -e "👋 Exiting..."
             break
