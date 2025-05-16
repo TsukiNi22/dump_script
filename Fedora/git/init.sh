@@ -1,3 +1,7 @@
+export RED='\033[31m'
+export GREEN='\033[32m'
+export RESET='\033[0m'
+
 echo -e "[${GREEN}OK${RESET}] Configuration of the git information"
 
 if [ -d ~/personal_delivery/ ]; then

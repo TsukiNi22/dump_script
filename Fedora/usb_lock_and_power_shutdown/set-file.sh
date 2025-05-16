@@ -7,7 +7,7 @@ if [ ! -z $3 ] && [ ! -z $4 ]; then
     command sed -i "s/WHOAMI/$SUDO_USER/g" "tmp_usb-lock.sh"
     echo -e "[${GREEN}OK${RESET}] Set of the file usb-lock.sh variable"
     command mv tmp_usb-lock.sh /usr/local/bin/usb-lock.sh
-    echo -e "[${GREEN}OK${RESET}] Usb-Lock service setup"
+    echo -e "[${GREEN}OK${RESET}] Usb-Lock script setup"
 else
     echo -e "[${YELLOW}WARNING${RESET}] Can't find a valid cancel usb (Cancel Usb: Not Setup)"
 fi
