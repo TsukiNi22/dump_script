@@ -19,9 +19,7 @@ SERIAL=$(cat "$USB_PATH/serial" 2>/dev/null || echo "'$USB_PATH/serial' Inconnu"
 DEVICE_BLOCK=$(lsblk -o SERIAL,UUID | grep -A 1 $SERIAL | tail -n 1 | sed "s/ //g")
 UUID=$(echo "$DEVICE_BLOCK" 2>/dev/null || echo "Can't find usb uuid")
 
-command cd pam_usb/
-
-command cp pam_usb.conf tmp_pam_usb.conf
+command cp pam_usb/pam_usb.conf tmp_pam_usb.conf
 command sed -i "s/VENDOR_NAME/$VENDOR/g" "tmp_pam_usb.conf"
 command sed -i "s/MODEL_NAME/$MODEL/g" "tmp_pam_usb.conf"
 command sed -i "s/SERIAL_NUMBER/$SERIAL/g" "tmp_pam_usb.conf"
@@ -31,8 +29,8 @@ echo -e "[${GREEN}OK${RESET}] Set of the file pam_usb.conf variable"
 
 command mv tmp_pam_usb.conf /etc/security/pam_usb.conf
 echo -e "[${GREEN}OK${RESET}] Pam Usb config file setup"
-command cp system-auth /etc/pam.d/
+command cp pam_usb/system-auth /etc/pam.d/
 echo -e "[${GREEN}OK${RESET}] Pam Usb system-auth"
-command cp password-auth /etc/pam.d/
+command cp pam_usb/password-auth /etc/pam.d/
 echo -e "[${GREEN}OK${RESET}] Pam Usb password-auth"
 

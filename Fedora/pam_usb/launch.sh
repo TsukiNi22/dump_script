@@ -1,7 +1,20 @@
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-dnf install gcc make vim git python3 -y
+dnf install gum gcc make vim git python3 -y
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
+
+DEVICE_INFO=$(lsusb | grep "$1:$2")
+if [ ! -s "$1" ] && [ ! -z "$2"] && [ ! -z "$DEVICE_INFO" ]; then
+    CHOICE=$(gum choose "Activate" "Desactivate")
+fi
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$DEVICE_INFO" ] || [ "$CHOICE" = "Desactivate" ]; then
+    command cp pam_usb/disabled_system-auth /etc/pam.d/
+    echo -e "[${GREEN}OK${RESET}] Desactivation of system-auth"
+    command cp pam_usb/disabled_password-auth /etc/pam.d/
+    echo -e "[${GREEN}OK${RESET}] Desactivation of password-auth"
+    exit 0
+fi
+
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PAM-USB${RESET}] 🔻 ════╗"
 command cd pam_usb/
 command rm -rf pam_usb/

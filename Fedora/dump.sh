@@ -68,7 +68,10 @@ MENU=("Pam Usb"
     "Quit")
 
 if [ -z "$vendor_id" ] || [ -z "$device_id" ] || [ -z "$DEVICE_INFO" ]; then
-    MENU=("Dotfile"
+    MENU=("Pam Usb (Desactivation)"
+        "Usb Lock & Power Shutdown (Desactivation)"
+        "Screen Of Intruder (Desactivation)"
+        "Dotfile"
         "Package & App"
         "Git"
         "Quit")
@@ -78,9 +81,9 @@ while true; do
     CHOICE=$(gum choose --cursor "👉" --header "Setup Menu:" "${MENU[@]}")
 
     case "$CHOICE" in
-        "Pam Usb")
+        "Pam Usb"|"Pam Usb (Desactivation)")
             echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
-            command sh pam_usb/launch.sh $vendor_id $cancel_vendor_id
+            command sh pam_usb/launch.sh $vendor_id $device_id
             if [ $? -eq 1 ]; then
                 echo -e "[${RED}FAILED${RESET}] Pam Usb"
                 echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
@@ -89,7 +92,7 @@ while true; do
             echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
             ;;
 
-        "Usb Lock & Power Shutdown")
+        "Usb Lock & Power Shutdown"|"Usb Lock & Power Shutdown (Desactivation)")
             echo -e "═════════ [${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}] ══════════"
             command sh usb_lock_and_power_shutdown/launch.sh $vendor_id $device_id $cancel_vendor_id $cancel_device_id
             if [ $? -eq 1 ]; then
@@ -100,7 +103,7 @@ while true; do
             echo -e "═════════ [${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}] ══════════"
             ;;
 
-        "Screen Of Intruder")
+        "Screen Of Intruder"|"Screen Of Intruder (Desactivation)")
             echo -e "═════════ [${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}] ══════════"
             command sh take_screen_of_intruder/launch.sh $vendor_id $device_id
             if [ $? -eq 1 ]; then
