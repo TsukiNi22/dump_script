@@ -8,9 +8,9 @@ if [ ! -s "$1" ] && [ ! -z "$2" ] && [ ! -z "$DEVICE_INFO" ]; then
     CHOICE=$(gum choose "Activate" "Desactivate")
 fi
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$DEVICE_INFO" ] || [ "$CHOICE" = "Desactivate" ]; then
-    command cp pam_usb/disabled_system-auth /etc/pam.d/
+    command cp pam_usb/disabled_system-auth /etc/pam.d/system-auth
     echo -e "[${GREEN}OK${RESET}] Desactivation of system-auth"
-    command cp pam_usb/disabled_password-auth /etc/pam.d/
+    command cp pam_usb/disabled_password-auth /etc/pam.d/password-auth
     echo -e "[${GREEN}OK${RESET}] Desactivation of password-auth"
     exit 0
 fi
