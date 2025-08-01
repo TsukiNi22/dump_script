@@ -15,27 +15,6 @@ if ! grep -q "Fedora" /etc/os-release; then
     exit 1
 fi
 echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
-
-vendor_id=$(gum input --placeholder "Write vendor-id")
-device_id=$(gum input --placeholder "Write device-id")
-cancel_vendor_id=$(gum input --placeholder "Write cancel-vendor-id")
-cancel_device_id=$(gum input --placeholder "Write cancel-device-id")
-DEVICE_INFO=$(lsusb | grep "$cancel_vendor_id:$cancel_device_id")
-if [ ! -z "$cancel_vendor_id" ] && [ ! -z "$cancel_device_id" ] && [ -z "$DEVICE_INFO" ]; then
-    echo -e "[${RED}FAILED${RESET}] Can't find a usb with cancel-vendor-id and cancel-device-id"
-elif [ -z "$cancel_vendor_id" ] || [ -z "$cancel_device_id" ]; then
-    echo -e "[${BLUE}INFO${RESET}] The cancel usb is not set"
-else
-    echo -e "[${GREEN}OK${RESET}] Cancel usb have been found"
-fi
-DEVICE_INFO=$(lsusb | grep "$vendor_id:$device_id")
-if [ ! -z "$vendor_id" ] && [ ! -z "$device_id" ] && [ -z "$DEVICE_INFO" ]; then
-    echo -e "[${RED}FAILED${RESET}] Can't find a usb with vendor-id and device-id"
-elif [ -z "$vendor_id" ] || [ -z "$device_id" ]; then
-    echo -e "[${BLUE}INFO${RESET}] The usb is not set"
-else
-    echo -e "[${GREEN}OK${RESET}] Usb have been found"
-fi
 echo -e "═══════════════ [${CYAN}VERIFICATION${RESET}] ═══════════════"
 
 # Update of the actual package
@@ -58,6 +37,52 @@ command dnf install gum -y
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 echo -e "══════════════ [${CYAN}INITIALISATION${RESET}] ══════════════"
+
+
+echo -e "════════════════ [${CYAN}USB-SETUP${RESET}] ═════════════════"
+# get the actual exesting list of usb
+choices=$(lsusb | awk '{print $6 " - " substr($0, index($0,$7))}')
+choices+="\nManual\nNone"
+
+# selection of the usb
+selected=$(echo -e "$choices" | gum choose --height=15 --header "Choices the main usb (optional but recommended):")
+if [[ "$selected" == "Manual" ]]; then
+    vendor_id=$(gum input --placeholder "Write main usb vendor-id")
+    device_id=$(gum input --placeholder "Write main usb device-id")
+elif ! [[ "$selected" == "None" ]]; then
+    id_pair=$(echo "$selected" | cut -d' ' -f1)
+    vendor_id=$(echo "$id_pair" | cut -d: -f1)
+    device_id=$(echo "$id_pair" | cut -d: -f2)
+fi
+
+DEVICE_INFO=$(lsusb | grep "$vendor_id:$device_id")
+if [ ! -z "$vendor_id" ] && [ ! -z "$device_id" ] && [ -z "$DEVICE_INFO" ]; then
+    echo -e "[${RED}FAILED${RESET}] Can't find a usb with the given vendor-id and device-id (${vendor_id}:${device_id})"
+elif [ -z "$vendor_id" ] || [ -z "$device_id" ]; then
+    echo -e "[${BLUE}INFO${RESET}] The main usb is not set"
+else
+    echo -e "[${GREEN}OK${RESET}] Main usb have been found"
+fi
+
+selected=$(echo -e "$choices" | gum choose --height=15 --header "Choices the cancel usb (optional):")
+if [[ "$selected" == "Manual" ]]; then
+    vendor_id=$(gum input --placeholder "Write cancel usb vendor-id")
+    device_id=$(gum input --placeholder "Write cancel usb device-id")
+elif ! [[ "$selected" == "None" ]]; then
+    id_pair=$(echo "$selected" | cut -d' ' -f1)
+    cancel_vendor_id=$(echo "$id_pair" | cut -d: -f1)
+    cancel_device_id=$(echo "$id_pair" | cut -d: -f2)
+fi
+
+CANCEL_DEVICE_INFO=$(lsusb | grep "$cancel_vendor_id:$cancel_device_id")
+if [ ! -z "$cancel_vendor_id" ] && [ ! -z "$cancel_device_id" ] && [ -z "$CANCEL_DEVICE_INFO" ]; then
+    echo -e "[${RED}FAILED${RESET}] Can't find a usb with the given vendor-id and device-id (${cancel_vendor_id}:${cancel_device_id})"
+elif [ -z "$cancel_vendor_id" ] || [ -z "$cancel_device_id" ]; then
+    echo -e "[${BLUE}INFO${RESET}] The cancel usb is not set"
+else
+    echo -e "[${GREEN}OK${RESET}] Cancel usb have been found"
+fi
+echo -e "════════════════ [${CYAN}USB-SETUP${RESET}] ═════════════════"
 
 MENU=("Pam Usb"
     "Usb Lock & Power Shutdown"
