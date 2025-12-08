@@ -20,9 +20,16 @@ unalias mkdir
 
 source $ZSH/oh-my-zsh.sh
 
+eval "$(zoxide init zsh)"
+alias cd='z'
+
+eval "$(thefuck --alias f)"
+
 #my alias
 alias edit='v ~/.zshrc && upd'
 alias upd='source ~/.zshrc'
+
+alias dump='\sudo make -C ~/personal_delivery/dump_script'
 
 alias lock='echo bruh!!! && session=$(loginctl | grep "$(whoami)" | awk "{print \$1}"); loginctl lock-session ${session};'
 
@@ -94,6 +101,8 @@ alias mgk='make get_unknow_files'
 alias c='make clean'
 alias fc='make fclean'
 
+alias t='rm -rf build; \mkdir build && cd build && cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release && cmake --build . && cd ..; rm -rf build'
+
 alias vg='valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --errors-for-leak-kinds=all'
 alias vgr='vg 2> vg'
 alias rvg='rm -f vg'
@@ -102,10 +111,10 @@ alias py='python3'
 alias pex='python3 main.py'
 alias p='python3'
 alias rmpc='rm -rf $(find . -name "__pycache__")'
-alias cl="clear && figlet \"I'm  a  FUCKING  banana ! ! !\" && \ls -a --color"
-alias ct="clear && figlet \"I'm  a  FUCKING  banana ! ! !\" && tree"
-#alias cl="clear && fastfetch && \ls -a --color"
-#alias ct="clear && fastfetch && tree"
+#alias cl="clear && figlet \"I'm  a  FUCKING  banana ! ! !\" && \ls -a --color"
+#alias ct="clear && figlet \"I'm  a  FUCKING  banana ! ! !\" && tree"
+alias cl="clear && fastfetch && \ls -a --color"
+alias ct="clear && fastfetch && tree"
 alias exi='exit'
 alias sv='\sudo vi'
 alias su='\sudo su'
@@ -143,14 +152,15 @@ alias dnfi='\sudo dnf install'
 alias dnfr='\sudo dnf remove'
 alias setup_terminal='tmnh && tmux select-pane -L && tmnv && cd include && cl && tmux select-pane -R && tmux select-pane -R  && tmux send-keys "mf && cl && gpl && gst" C-m && tmux select-pane -R && tmux send-keys "cd src && cl && tree" C-m'
 
-alias h='cd ~/delivery/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. && cd -'
-alias hd='cd ~/delivery/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. -D && cd -'
+alias h='cd ~/delivery/year_1/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. && cd -'
+alias hd='cd ~/delivery/year_1/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. -D && cd -'
 alias tt="rm -f *.cor ; echo 'COMPILATION:' && m && echo && echo 'FILE:' && cat \$FILE && echo && echo 'OUR:' && ./asm \$FILE && mv *.cor our && hexdump -C our && echo && echo 'OTHER:' && ./binaries/asm/asm \$FILE && mv *.cor real && hexdump -C real && echo && echo 'DIFF:' && cmp -l our real | awk '{printf \"Diff at byte %d\n\", \$1 - 2192}' ; rm -f our real"
 
 alias a='ani-cli'
 alias ulimit_reset='ulimit -s 8192'
 
 alias fastfetch="~/.config/fastfetch/rdm_img.sh"
+alias streamlit="~/.local/bin/streamlit"
 
 alias e='xeyes'
 alias rtfm='zenity --info --title="Just" --width=700 --height=400 --text="<span font='\''75'\'' color='\''red'\''><b>RTFM</b></span>\n\n<span font='\''20'\''>READ THE F***ING MANUAL!!!</span>"'

@@ -23,7 +23,5 @@ else
     echo -e "[${GREEN}OK${RESET}] Setup work delivery"
 fi
 
-command mkdir -p ~/delivery/aia ~/delivery/cpe ~/delivery/cyber ~/delivery/dop ~/delivery/eng ~/delivery/hub ~/delivery/mat ~/delivery/mul ~/delivery/pro ~/delivery/psu ~/delivery/workshop
-echo -e "[${GREEN}OK${RESET}] Setup of the directory in delivery"
 command cp -rf git/template ~/delivery/
 echo -e "[${GREEN}OK${RESET}] Setup of the template for c project"
