@@ -1,2 +1,1 @@
-ACTION=="remove", SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="VENDOR_IDV", ENV{ID_MODEL_ID}=="DEVICE_IDV", RUN+="/usr/local/bin/usb-lock.sh lock"
-ACTION=="change", SUBSYSTEM=="power_supply", ATTR{online}=="0", RUN+="/usr/local/bin/usb-lock.sh shutdown"
+ACTION=="remove", SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="VENDOR_IDV", ENV{ID_MODEL_ID}=="DEVICE_IDV", RUN+="/usr/local/bin/usb-lock_power-shutdown.sh lock"
