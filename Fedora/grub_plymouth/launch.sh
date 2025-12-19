@@ -3,7 +3,7 @@ if [ ! -d /boot/$GRUB ]; then
 	GRUB="grub2"
 fi
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ═════╗"
-command dnf install git plymouth dracut $GRUB -y
+command dnf install git dracut plymouth plymouth-core-libs plymouth-graphics-libs plymouth-scripts plymouth-system-theme $GRUB -y
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ═════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 

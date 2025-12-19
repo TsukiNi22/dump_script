@@ -1,5 +1,5 @@
 echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install vi vim neovim fastfetch zsh -y
+command dnf install vi vim neovim fastfetch chafa zsh sl -y
 echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
 echo -e "[${GREEN}OK${RESET}] Download Package"
 
