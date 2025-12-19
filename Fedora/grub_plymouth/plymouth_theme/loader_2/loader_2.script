@@ -72,7 +72,8 @@ fun DisplayPasswordCallback(nil, bulletCount) {
     totalWidth = bulletCount * bullet.image.GetWidth();
     startPos = screen.half.w - totalWidth / 2;
 
-    prompt.image = Image.Text("You shall give me a password to go this way: ", 1, 1, 1);
+    //prompt.image = Image.Text("You shall give me a password to go this way: ", 1, 1, 1);
+    prompt.image = Image.Text("loading...", 1, 1, 1);
     prompt.sprite = Sprite(prompt.image);
     prompt.sprite.SetX(screen.half.w - prompt.image.GetWidth() / 2);
     prompt.sprite.SetY(screen.h - 4 * prompt.image.GetHeight());
