@@ -31,7 +31,7 @@ alias upd='source ~/.zshrc'
 
 alias dump='\sudo make -C ~/personal_delivery/dump_script'
 
-alias lock='echo bruh!!! && session=$(loginctl | grep "$(whoami)" | awk "{print \$1}"); loginctl lock-session ${session};'
+alias lock='echo bruh!!!; loginctl lock-session;'
 
 alias sudo='lock'
 alias vi='lock'
