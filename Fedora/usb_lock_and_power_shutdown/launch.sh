@@ -28,8 +28,8 @@ if [[ -n "$1" && -n "$2" && -n "$DEVICE_INFO" ]]; then
         "USB Lock ($STATUS_USB)" \
         "Power Shutdown ($STATUS_POWER)" \
         "Both (Activation)" \
-        "Both (Desactivation)")
-        "Cancel"
+        "Both (Desactivation)" \
+        "Cancel" )
 else
     CHOICE="Both (Desactivation)"
 fi

@@ -19,12 +19,17 @@ SERIAL=$(cat "$USB_PATH/serial" 2>/dev/null || echo "'$USB_PATH/serial' Inconnu"
 DEVICE_BLOCK=$(lsblk -o SERIAL,UUID | grep -A 1 $SERIAL | tail -n 1 | sed "s/ //g")
 UUID=$(echo "$DEVICE_BLOCK" 2>/dev/null || echo "Can't find usb uuid")
 
+escape_sed() {
+  printf '%s' "$1" | sed 's/[&/\|]/\\&/g'
+}
+VENDOR_ESC=$(escape_sed "$VENDOR")
+
 command cp pam_usb/pam_usb.conf tmp_pam_usb.conf
-command sed -i "s/VENDOR_NAME/$VENDOR/g" "tmp_pam_usb.conf"
-command sed -i "s/MODEL_NAME/$MODEL/g" "tmp_pam_usb.conf"
-command sed -i "s/SERIAL_NUMBER/$SERIAL/g" "tmp_pam_usb.conf"
-command sed -i "s/VOLUME_UUID/$UUID/g" "tmp_pam_usb.conf"
-command sed -i "s/WHOAMI/$SUDO_USER/g" "tmp_pam_usb.conf"
+command sed -i "s|VENDOR_NAME|$VENDOR_ESC|g" "tmp_pam_usb.conf"
+command sed -i "s|MODEL_NAME|$MODEL|g" "tmp_pam_usb.conf"
+command sed -i "s|SERIAL_NUMBER|$SERIAL|g" "tmp_pam_usb.conf"
+command sed -i "s|VOLUME_UUID|$UUID|g" "tmp_pam_usb.conf"
+command sed -i "s|WHOAMI|$SUDO_USER|g" "tmp_pam_usb.conf"
 echo -e "[${GREEN}OK${RESET}] Set of the file pam_usb.conf variable"
 
 command mv tmp_pam_usb.conf /etc/security/pam_usb.conf
