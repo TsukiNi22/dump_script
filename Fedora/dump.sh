@@ -7,6 +7,7 @@
 # Internal modes called by fzf (state shared in $DUMP_STATE_DIR):
 #   --entries               print the menu entries
 #   --header                print the header (keys + running / last setup)
+#   --prompt                print the prompt (menu or running)
 #   --preview <n>           details of the entry n + its last / running output
 #   --action <n> <f> <q>    enter: run the entry n, or validate a question (<f> = selected items, <q> = query)
 #   --escape                esc: cancel a question, or quit
@@ -145,9 +146,16 @@ task_setup() {
 # Menu
 # =========================
 # Print the menu entries (one per line), they depend on the selected usb
+# While a task runs the list is locked: one line, the output is on the right (questions excepted)
 menu_entries() {
     local usb_state=""
+    local -a task=()
 
+    read -r -a task <<< "$(running_task)" || true
+    if [[ ${#task[@]} -gt 0 ]]; then
+        echo "${YELLOW}${BOLD}Running: ${task[2]}${RESET} ${GREY}(output on the right)${RESET}"
+        return 0
+    fi
     load_usbs
     if ! usb_is_plugged "$vendor_id" "$device_id"; then
         usb_state=" (Deactivation)"
@@ -216,7 +224,7 @@ run_task() {
     fi
     export DUMP_LOG="$DUMP_STATE_DIR/$key.log"
     echo "$$ $key $TASK_NAME" > "$RUNNING_FILE"
-    fzf_post "transform-header(bash $SELF_Q --header)+refresh-preview"
+    fzf_post "$MENU_ACTIONS"
     {
         section "$TASK_NAME"
         "${TASK_CMD[@]}" || status=1
@@ -234,7 +242,7 @@ run_task() {
     fi
     echo "$key" > "$DUMP_STATE_DIR/last"
     rm -f "$RUNNING_FILE"
-    fzf_post "reload-sync(bash $SELF_Q --entries)+transform-header(bash $SELF_Q --header)+refresh-preview"
+    fzf_post "$MENU_ACTIONS+first"
 }
 
 # Colored result of a status file
@@ -289,11 +297,18 @@ preview_entry() {
     local -a task=()
 
     read -r -a task <<< "$(running_task)" || true
-    # A question is asked: show the output of the task asking it
+    # A question is asked: output of the task asking it
     if [[ "$(mode)" == "answer" && ${#task[@]} -gt 0 ]]; then
         echo "${BOLD}${MAGENTA}${task[2]}${RESET} ${GREY}waits for an answer (list on the left)${RESET}"
         echo
         cat "$DUMP_STATE_DIR/${task[1]}.log"
+        return 0
+    fi
+    # A task runs (list locked): its live output
+    if [[ ${#task[@]} -gt 0 ]]; then
+        echo "${BOLD}${MAGENTA}${task[2]}${RESET} ${GREY}is running${RESET}"
+        echo
+        show_output "${task[1]}" "${task[0]}"
         return 0
     fi
     key=$(entry_key "$entry")
@@ -309,8 +324,8 @@ preview_entry() {
     fi
 }
 
-# Actions putting the menu back after a question
-MENU_ACTIONS="reload-sync(bash $SELF_Q --entries)+change-prompt(Setup ❯ )+transform-header(bash $SELF_Q --header)"
+# Actions putting the list back (menu, or the locked running line) after a question / a task change
+MENU_ACTIONS="reload-sync(bash $SELF_Q --entries)+transform-prompt(bash $SELF_Q --prompt)+transform-header(bash $SELF_Q --header)"
 MENU_ACTIONS+="+clear-query+deselect-all+refresh-preview"
 
 # Enter: validate the question, or run the entry
@@ -339,13 +354,14 @@ action_enter() {
         return 0
     fi
 
+    # List locked while a task runs
+    if [[ -n "$(running_task)" ]]; then
+        echo "ignore"
+        return 0
+    fi
     entry=$(entry_at "$index")
     if [[ "$entry" == "Quit" ]]; then
         action_escape
-        return 0
-    fi
-    if [[ -n "$(running_task)" ]]; then
-        echo "transform-header(bash $SELF_Q --header; echo '${RED}A setup is already running, wait for its end${RESET}')"
         return 0
     fi
     setsid bash "$SELF" --task "$index" > /dev/null 2>&1 < /dev/null &
@@ -371,6 +387,9 @@ action_escape() {
 case "${1:-}" in
     --entries) menu_entries; exit 0 ;;
     --header) menu_header; exit 0 ;;
+    --prompt)
+        if [[ -n "$(running_task)" ]]; then echo "Running ❯ "; else echo "Setup ❯ "; fi
+        exit 0 ;;
     --preview) preview_entry "$(entry_at "$2")"; exit 0 ;;
     --action) action_enter "$2" "$3" "${4:-}"; exit 0 ;;
     --escape) action_escape; exit 0 ;;
