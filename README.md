@@ -1,6 +1,6 @@
 # Dump Script for Fedora
 
-### Script to automatically set Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder / Dotfile / Package & App / Git / Grub & Plymouth
+### Script to automatically set Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder / Dotfile / Package & App / Custom Package & Binary / AI / Git / Grub & Plymouth
 
 ![image](https://github.com/user-attachments/assets/397c929e-ab0b-4994-8f5c-cf8edadd4b42)
 
@@ -22,9 +22,10 @@ sudo make
 > Once the dotfiles are installed, the `dump` alias of the zshrc runs `sudo make` in this repository (path written by the Dotfile setup, wherever it was cloned).
 
 > [!NOTE]
-> Every setup is chosen from a `gum` menu and can also be run alone: `sudo bash Fedora/<setup>/launch.sh`.
+> Every setup is chosen from a `fzf` menu showing the details of the hovered setup, and can also be run alone:
+> `sudo bash Fedora/<setup>/launch.sh`. The usb keys can be chosen again from the menu (`Usb Keys`).
 
-## Content of Dotfile and Package & App
+## Content of Dotfile, Package & App, Custom Package & AI
 
 ### Dotfile
 | Config | Content |
@@ -41,6 +42,28 @@ sudo make
 
 ### App
 `vscode`, `qBittorrent`, `vesktop`, `sober`, `wireshark`, `Telegram`
+
+### Custom Package & Binary
+| Name | Content |
+| ---- | ------- |
+| [`libutils`](https://github.com/TsukiNi22/libutils) | TsukiNi22 rpm mirror, every build (optimized, debug, asan + headers) |
+| `xstyle` | Coding style checker of the [skills](https://github.com/TsukiNi22/skills) repository (`~/.local/bin`) |
+
+### AI
+| Name | Content |
+| ---- | ------- |
+| `Claude Code` | Native installer (`~/.local/bin/claude`) |
+| `Ollama` | Official installer (`/usr/local/bin/ollama`, `ollama.service`) |
+| `Skills` | Every skill of the [skills](https://github.com/TsukiNi22/skills) repository in `~/.claude/skills` + their tools |
+| `Skills context` | `CLAUDE.md`, `RTK.md`, hooks and `rtk` (branch `context` of the skills repository) |
+
+### Git
+Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then clone (https, push with ssh) any of:
+| Repository | Folder |
+| ---------- | ------ |
+| `libutils`, `cpp_project_template` | `~/personal_delivery/cpp/` |
+| `skills` | `~/personal_delivery/other/skills` (used by the Custom Package & AI setups) |
+| Other links (one per line) | Chosen folder (default: `~/personal_delivery`) |
 
 > [!CAUTION]
 > The Pam Usb setup replaces `/etc/pam.d/system-auth` and `/etc/pam.d/password-auth` (managed by `authselect`):
@@ -66,4 +89,5 @@ For the `USB Disk 2.0` the `vendor-id` is `ffff` and the `device-id` is `5678`.
 | cancel (`cancel-vendor-id` / `cancel-device-id`, optional) | Usb Lock & Power Shutdown: plugged -> the lock & shutdown are cancelled |
 
 > [!NOTE]
-> Without a plugged main usb, the 3 usb setups are shown with `(Deactivation)` and remove what they installed.
+> Without a plugged main usb, the 3 usb setups are shown with `(Deactivation)` and remove what they installed
+> (Usb Lock & Power Shutdown: one of them or both).
