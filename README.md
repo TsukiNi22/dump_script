@@ -2,7 +2,7 @@
 
 ### Script to automatically set Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder / Dotfile / Package & App / Custom Package & Binary / AI / Git / Grub & Plymouth
 
-![image](https://github.com/user-attachments/assets/397c929e-ab0b-4994-8f5c-cf8edadd4b42)
+![Loading screen](docs/img/loading.png)
 
 > [!WARNING]
 > The script must be run with `sudo` from the user account (the config files belong to `$SUDO_USER`).
@@ -36,6 +36,10 @@ sudo make
 > setup runs in the background with its output shown live on the right (details, status and output of its last
 > run, `ctrl-l`: whole output), and its questions are asked in the list of the window. Every setup can also be run
 > alone (`gum` prompts, `fzf` without gum): `sudo bash Linux/<setup>/launch.sh`.
+
+| Menu (details of the hovered setup) | Setup running (list locked, live output) | Question of a setup |
+| ----------------------------------- | ---------------------------------------- | ------------------- |
+| ![Menu](docs/img/menu.png) | ![Setup running](docs/img/running.png) | ![Question](docs/img/question.png) |
 
 ## Content of Dotfile, Package & App, Custom Package & AI
 
