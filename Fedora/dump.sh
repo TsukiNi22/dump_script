@@ -32,7 +32,7 @@ box_close "UPDATE-PACKAGE"
 ok "Update package"
 
 section "INITIALISATION"
-install_packages gum usbutils
+install_packages gum fzf usbutils
 
 # =========================
 # Usb selection
@@ -77,46 +77,65 @@ check_usb() {
     fi
 }
 
-section "USB-SETUP"
-read -r vendor_id device_id <<< "$(select_usb "Choose the main usb (optional but recommended):")" || true
-check_usb "main" "${vendor_id:-}" "${device_id:-}"
-read -r cancel_vendor_id cancel_device_id <<< "$(select_usb "Choose the cancel usb (optional):")" || true
-check_usb "cancel" "${cancel_vendor_id:-}" "${cancel_device_id:-}"
-vendor_id="${vendor_id:-}"
-device_id="${device_id:-}"
-cancel_vendor_id="${cancel_vendor_id:-}"
-cancel_device_id="${cancel_device_id:-}"
+# Ask the main & cancel usb (again from the menu to edit them)
+select_usbs() {
+    section "USB-SETUP"
+    read -r vendor_id device_id <<< "$(select_usb "Choose the main usb (optional but recommended):")" || true
+    vendor_id="${vendor_id:-}"
+    device_id="${device_id:-}"
+    check_usb "main" "$vendor_id" "$device_id"
+    read -r cancel_vendor_id cancel_device_id <<< "$(select_usb "Choose the cancel usb (optional):")" || true
+    cancel_vendor_id="${cancel_vendor_id:-}"
+    cancel_device_id="${cancel_device_id:-}"
+    check_usb "cancel" "$cancel_vendor_id" "$cancel_device_id"
+}
+
+# Usb part of the menu, depends on the selected usb
+usb_menu_state() {
+    local main="${vendor_id:-none}:${device_id:-none}"
+    local cancel="${cancel_vendor_id:-none}:${cancel_device_id:-none}"
+
+    USB_STATE=""
+    if ! usb_is_plugged "$vendor_id" "$device_id"; then
+        USB_STATE=" (Deactivation)"
+    fi
+    USB_KEYS="Usb Keys (main: $main, cancel: $cancel)"
+}
+
+select_usbs
 
 # =========================
 # Menu
 # =========================
-# Run a setup and stop everything if it failed
+# Run a setup, a failure is reported and the menu goes on
 run_setup() {
     local name="$1"
     shift
 
     section "$name"
     if ! bash "$@"; then
-        failed "$name"
-        exit 1
+        failed "$name (see the errors above)"
     fi
 }
 
-USB_STATE=""
-if ! usb_is_plugged "$vendor_id" "$device_id"; then
-    USB_STATE=" (Deactivation)"
-fi
-MENU=("Pam Usb$USB_STATE"
-    "Usb Lock & Power Shutdown$USB_STATE"
-    "Screen Of Intruder$USB_STATE"
-    "Dotfile"
-    "Package & App"
-    "Git"
-    "Grub & Plymouth"
-    "Quit")
-
 while true; do
-    CHOICE=$(gum choose --cursor "👉" --header "Setup Menu:" "${MENU[@]}") || CHOICE="Quit"
+    usb_menu_state
+    MENU=("Pam Usb$USB_STATE"
+        "Usb Lock & Power Shutdown$USB_STATE"
+        "Screen Of Intruder$USB_STATE"
+        "$USB_KEYS"
+        "Dotfile"
+        "Package & App"
+        "Custom Package & Binary"
+        "AI"
+        "Git"
+        "Grub & Plymouth"
+        "Quit")
+    # fzf: the preview shows the details of the hovered entry (describe.sh)
+    CHOICE=$(printf '%s\n' "${MENU[@]}" | fzf --no-sort --layout=reverse --height=100% --border \
+        --header "Setup Menu (enter: run, esc: quit)" --pointer "👉" --no-info \
+        --preview "bash $(printf '%q' "$SCRIPT_DIR/describe.sh") {}" --preview-window "right,60%,wrap") \
+        || CHOICE="Quit"
 
     case "$CHOICE" in
         "Pam Usb"*)
@@ -126,10 +145,16 @@ while true; do
                 "$vendor_id" "$device_id" "$cancel_vendor_id" "$cancel_device_id" ;;
         "Screen Of Intruder"*)
             run_setup "TAKE-SCREEN-OF-INTRUDER" "$SCRIPT_DIR/take_screen_of_intruder/launch.sh" "$vendor_id" "$device_id" ;;
+        "Usb Keys"*)
+            select_usbs ;;
         "Dotfile")
             run_setup "DOTFILE" "$SCRIPT_DIR/dotfile/launch.sh" ;;
         "Package & App")
             run_setup "PACKAGE-APP" "$SCRIPT_DIR/package_app/launch.sh" ;;
+        "Custom Package & Binary")
+            run_setup "CUSTOM-PACKAGE" "$SCRIPT_DIR/custom_package/launch.sh" ;;
+        "AI")
+            run_setup "AI" "$SCRIPT_DIR/ai/launch.sh" ;;
         "Git")
             run_setup "GIT" "$SCRIPT_DIR/git/launch.sh" ;;
         "Grub & Plymouth")
