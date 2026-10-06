@@ -1,34 +1,41 @@
-vim.api.nvim_create_autocmd("BufReadPost", {
-    pattern = "*",
-    callback = function()
-        local bufnr = vim.api.nvim_get_current_buf()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+local user = "Tsukini"
+local HEADER_MAX_LINES = 30 -- The header is searched only at the start of the file
 
-        local edition_line = nil
+-- First line of the Xartania / Epitech C++ headers
+local header_borders = {
+    ["/**************************************************************\\"] = true,
+    ["@>************************************************************<@"] = true,
+    ["#**************************************************************#"] = true,
+    [string.rep('"', 63)] = true,
+}
+
+-- Update the edition date of the header when the file is saved
+vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = "*",
+    callback = function(args)
+        local bufnr = args.buf
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, HEADER_MAX_LINES, false)
         local header_found = false
-        local repeated_quotes = string.rep('"', 63)
 
         for i, line in ipairs(lines) do
-            if line == "/**************************************************************\\" or line == "@>************************************************************<@" or line == "#**************************************************************#" or line == repeated_quotes then
+            if header_borders[line] then
                 header_found = true
             end
-            if line:match("^Edition:") then
-                edition_line = i
+            local prefix = line:match("^([#@]?)Edition:$")
+            if header_found and prefix and lines[i + 1] then
+                local ext = vim.fn.fnamemodify(args.file, ":e")
+                local date = os.date("%d/%m/%Y")
+                local mark = prefix == "" and "##" or prefix .. "**" -- "#**" / "@**" for the Makefile / C15 headers
+                local new_line = mark .. "  " .. date .. " by " .. user
+
+                if ext == "cpp" or ext == "hpp" then
+                    new_line = mark .. "  @date " .. date .. " by @author " .. user
+                end
+                if lines[i + 1] ~= new_line then
+                    vim.api.nvim_buf_set_lines(bufnr, i, i + 1, false, { new_line })
+                end
+                return
             end
         end
-
-        if header_found and edition_line then
-            local ext = vim.fn.expand("%:e")  -- Obtient l'extension du fichier
-            local date = os.date("%d/%m/%Y")
-            local user = "Tsukini"
-            local new_line = "Edition:\n##  Error"
-            if ext == "cpp" or ext == "hpp" then
-                new_line = "Edition:\n##  @date " .. date .. " by @author " .. user
-            else
-                new_line = "Edition:\n##  " .. date .. " by " .. user
-            end
-
-            vim.api.nvim_buf_set_lines(bufnr, edition_line - 1, edition_line + 1, false, vim.split(new_line, "\n"))
-        end
-    end
+    end,
 })

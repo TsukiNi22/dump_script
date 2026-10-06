@@ -1,13 +1,13 @@
-function InsertProtoPy()
+local function InsertProtoPy()
     local proto = {
         "def ():",
         "    pass",
     }
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, proto)
 end
 
-function InsertProtoCPP()
+local function InsertProtoC()
     local proto = {
         "int (main_data_t *data)",
         "{",
@@ -16,14 +16,13 @@ function InsertProtoCPP()
         "    return OK;",
         "}",
     }
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, proto)
 end
 
-function InsertProtoH()
+local function InsertProtoH()
     local filename = vim.fn.expand("%:t:r")
     local filename_upper = string.upper(filename)
-    local year = os.date("%Y")
     local proto = {
         "#ifndef " .. filename_upper .. "_H",
         "    #define " .. filename_upper .. "_H",
@@ -48,26 +47,25 @@ function InsertProtoH()
         "",
         "#endif /* " .. filename_upper .. "_H */",
     }
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, proto)
 end
- 
-function InsertProtoC()
+
+local function InsertProtoCPP()
     local filename = vim.fn.expand("%:t:r")
     local proto = {
         "void " .. filename .. "::()",
         "{",
-        "   /* Nothing */",
+        "    /* Nothing */",
         "}",
     }
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, proto)
 end
 
-function InsertProtoHPP()
+local function InsertProtoHPP()
     local filename = vim.fn.expand("%:t:r")
     local filename_upper = string.upper(filename)
-    local year = os.date("%Y")
     local proto = {
         "#ifndef " .. filename_upper .. "_H",
         "    #define " .. filename_upper .. "_H",
@@ -111,13 +109,12 @@ function InsertProtoHPP()
         "",
         "#endif /* " .. filename_upper .. "_H */",
     }
-    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local row = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_set_lines(0, row, row, false, proto)
 end
 
-function InsertProto()
-    local filename = vim.fn.expand("%:t")
-    local ext = vim.fn.expand("%:e")  -- Obtient l'extension du fichier
+local function InsertProto()
+    local ext = vim.fn.expand("%:e")
 
     if ext == "py" then
         InsertProtoPy()

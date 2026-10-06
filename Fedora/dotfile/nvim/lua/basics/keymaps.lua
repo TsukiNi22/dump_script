@@ -28,8 +28,8 @@ vim.keymap.set('i', '<C-l>', '<C-o>$', opts)                        --End of lin
 vim.keymap.set({'n', 'v'}, 'L', '^', opts)                          --Start of line (normal/visual, overrides default L = bottom of screen)
 
 -- Horizontal splits -> Ctrl+Shift+PageUp/PageDown
-vim.keymap.set({'n', 'i'}, '<C-S-PageUp>',   '<cmd>botright split<CR>',   opts)  --Horizontal split, new window at top
-vim.keymap.set({'n', 'i'}, '<C-S-PageDown>', '<cmd>topleft split<CR>', opts)   --Horizontal split, new window at bottom
+vim.keymap.set({'n', 'i'}, '<C-S-PageUp>',   '<cmd>topleft split<CR>',  opts)  --Horizontal split, new window at top
+vim.keymap.set({'n', 'i'}, '<C-S-PageDown>', '<cmd>botright split<CR>', opts)  --Horizontal split, new window at bottom
 
 -- Window switching -> Ctrl+Shift+arrows
 vim.keymap.set({'n', 'i'}, '<C-S-Up>',    '<cmd>wincmd k<CR>', opts)    --Switch to window above
@@ -38,16 +38,18 @@ vim.keymap.set({'n', 'i'}, '<C-S-Down>',  '<cmd>wincmd j<CR>', opts)    --Switch
 -- Other
 vim.keymap.set({'n', 'i'}, '<C-h>', require("header.choice"), opts)     -- Write header at the start of the file
 vim.keymap.set({'n', 'i'}, '<C-f>', require("function.choice"), opts)   -- Write function proto at the curent position
-local ts_enabled = true
+
+-- Start & Stop the advanced color highlight of the current buffer (no error without parser)
 local function toggle_treesitter()
-    if ts_enabled then
-        vim.treesitter.stop()
-        ts_enabled = false
+    local buf = vim.api.nvim_get_current_buf()
+
+    if vim.treesitter.highlighter.active[buf] then
+        vim.treesitter.stop(buf)
         print("Treesitter OFF")
-    else
-        vim.treesitter.start()
-        ts_enabled = true
+    elseif pcall(vim.treesitter.start, buf) then
         print("Treesitter ON")
+    else
+        print("Treesitter: no parser for '" .. vim.bo[buf].filetype .. "'")
     end
 end
-vim.keymap.set("n", "<C-p>", toggle_treesitter, { noremap = true, silent = true }) -- Start & Stop the advenced color higlight
+vim.keymap.set('n', '<C-p>', toggle_treesitter, opts)                   -- Start & Stop the advanced color highlight

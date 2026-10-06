@@ -1,6 +1,6 @@
 local user = "Tsukini"
 
-function InsertHeaderPy()
+local function InsertHeaderPy()
     local filename = vim.fn.expand("%:t")
     local year = os.date("%Y")
     local header = {
@@ -16,7 +16,7 @@ function InsertHeaderPy()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderC()
+local function InsertHeaderC()
     local filename = vim.fn.expand("%:t")
     local year = os.date("%Y")
     local header = {
@@ -33,7 +33,7 @@ function InsertHeaderC()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderCPP()
+local function InsertHeaderCPP()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
     local filename = vim.fn.expand("%:t:r")
@@ -49,19 +49,21 @@ function InsertHeaderCPP()
         "##  You know, I don t think there are good or bad descriptions,",
         "##  for me, life is all about functions...",
         "\\**************************************************************/",
-        "",
-        "#include \"" .. filename .. ".hpp\""
     }
+    -- A .cpp includes its .hpp, a .hpp doesn't include itself
+    if vim.fn.expand("%:e") == "cpp" then
+        vim.list_extend(header, { "", "#include \"" .. filename .. ".hpp\"" })
+    end
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderHHeader()
+local function InsertHeaderHHeader()
     local filename = vim.fn.expand("%:t")
     local year = os.date("%Y")
     local header = {
         "/*",
         "** EPITECH PROJECT, " .. year,
-        "** " .. filename .. ".h",
+        "** " .. filename,
         "** File description:",
         "** Header for the " .. filename,
         "*/",
@@ -69,7 +71,7 @@ function InsertHeaderHHeader()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderMakefile()
+local function InsertHeaderMakefile()
     local filename = vim.fn.expand("%:t")
     local year = os.date("%Y")
     local header = {
@@ -85,7 +87,7 @@ function InsertHeaderMakefile()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderHaskell()
+local function InsertHeaderHaskell()
     local filename = vim.fn.expand("%:t")
     local year = os.date("%Y")
     local header = {
@@ -101,14 +103,16 @@ function InsertHeaderHaskell()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeader()
+local function InsertHeader()
     local filename = vim.fn.expand("%:t")
-    local ext = vim.fn.expand("%:e")  -- Obtient l'extension du fichier
+    local ext = vim.fn.expand("%:e")
 
     if ext == "py" then
         InsertHeaderPy()
-    elseif ext == "c" or ext == "h" then
+    elseif ext == "c" then
         InsertHeaderC()
+    elseif ext == "h" then
+        InsertHeaderHHeader()
     elseif ext == "cpp" or ext == "hpp" then
         InsertHeaderCPP()
     elseif filename == "Makefile" or filename == "makefile" or ext == "mk" then

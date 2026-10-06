@@ -1,6 +1,6 @@
 local user = "Tsukini"
 
-function InsertHeaderC15()
+local function InsertHeaderC15()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
 
@@ -29,7 +29,7 @@ function InsertHeaderC15()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderPy()
+local function InsertHeaderPy()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
     local repeated_quotes = string.rep('"', 63)
@@ -59,7 +59,7 @@ function InsertHeaderPy()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderC()
+local function InsertHeaderC()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
 
@@ -88,7 +88,7 @@ function InsertHeaderC()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderCPP()
+local function InsertHeaderCPP()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
 
@@ -117,7 +117,7 @@ function InsertHeaderCPP()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeaderMakefile()
+local function InsertHeaderMakefile()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
 
@@ -146,9 +146,9 @@ function InsertHeaderMakefile()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
-function InsertHeader()
+local function InsertHeader()
     local filename = vim.fn.expand("%:t")
-    local ext = vim.fn.expand("%:e")  -- Obtient l'extension du fichier
+    local ext = vim.fn.expand("%:e")
 
     if ext == "15" or ext == "15h" then
         InsertHeaderC15()
