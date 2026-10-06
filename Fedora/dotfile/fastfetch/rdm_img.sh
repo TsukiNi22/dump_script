@@ -1,35 +1,26 @@
 #!/bin/bash
+# Usage: rdm_img.sh [-b|--banana]
+# Run fastfetch with a random picture of img/ (or the banana one)
+set -euo pipefail
 
-# Dossiers
-IMG_DIR="$HOME/.config/fastfetch/img"
-BANANA_IMG="$HOME/.config/fastfetch/banana/banana.png"
+FASTFETCH_DIR="$HOME/.config/fastfetch"
+IMG_DIR="$FASTFETCH_DIR/img"
+BANANA_IMG="$FASTFETCH_DIR/banana/banana.png"
+CONFIG_SAVE="$FASTFETCH_DIR/config_save.jsonc" # Template, 'IMG' is replaced by the picture path
+CONFIG="$FASTFETCH_DIR/config.jsonc"
 
-# Fichier de config
-CONFIG_SAVE="$HOME/.config/fastfetch/config_save.jsonc"
-CONFIG="$HOME/.config/fastfetch/config.jsonc"
-
-# Image par défaut : aléatoire
-RANDOM_IMG=$(find "$IMG_DIR" -type f | shuf -n 1)
-IMG="$RANDOM_IMG"
-
-# Gestion des arguments
+IMG=$(find "$IMG_DIR" -type f | shuf -n 1)
 for arg in "$@"; do
     case "$arg" in
-        -b|--banana)
-            IMG="$BANANA_IMG"
-            ;;
+        -b|--banana) IMG="$BANANA_IMG" ;;
+        *) echo "Error: unknown argument '$arg'" >&2; exit 1 ;;
     esac
 done
 
-# Vérification image
 if [[ ! -f "$IMG" ]]; then
-    echo "Erreur: can't found the given picture -> $IMG"
+    echo "Error: can't find the given picture -> $IMG" >&2
     exit 1
 fi
 
-# Appliquer la config
-cp "$CONFIG_SAVE" "$CONFIG"
-sed -i "s#IMG#$IMG#g" "$CONFIG"
-
-# Lancer fastfetch
+sed "s#IMG#$IMG#g" "$CONFIG_SAVE" > "$CONFIG"
 fastfetch
