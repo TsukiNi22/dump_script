@@ -106,7 +106,7 @@ clone_repo() {
 }
 
 CHOICES=$(gum choose --no-limit --header "Repositories to clone:" \
-    "libutils" "skills" "cpp_project_template" "Other links") || CHOICES=""
+    "libutils" "skills" "cpp_project_template" "docker-image" "Other links") || CHOICES=""
 mapfile -t SELECTED <<< "$CHOICES"
 status=0
 for choice in "${SELECTED[@]}"; do
@@ -115,6 +115,9 @@ for choice in "${SELECTED[@]}"; do
             clone_repo "https://github.com/$GITHUB_USER/$choice.git" "$USER_HOME/personal_delivery/cpp/$choice" || status=1 ;;
         "skills")
             clone_repo "https://github.com/$GITHUB_USER/skills.git" "$SKILLS_DIR" || status=1 ;;
+        "docker-image")
+            clone_repo "https://github.com/$GITHUB_USER/docker-image.git" "$USER_HOME/personal_delivery/other/docker-image" \
+                || status=1 ;;
         "Other links")
             links=$(gum write --height=10 --placeholder "One repository link per line (ctrl+d to validate)") || links=""
             dest_dir=$(gum input --value "$USER_HOME/personal_delivery" --placeholder "Folder of the clones")

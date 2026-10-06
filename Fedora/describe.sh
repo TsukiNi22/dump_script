@@ -113,7 +113,7 @@ format() {
             echo "  - ~/.ssh/git key + github host in ~/.ssh/config (public key printed)"
             echo "  - clone (https, push with ssh) any of:"
             echo "      libutils, cpp_project_template -> ~/personal_delivery/cpp/"
-            echo "      skills -> ~/personal_delivery/other/skills"
+            echo "      skills, docker-image -> ~/personal_delivery/other/"
             echo "      other links (one per line) -> chosen folder"
             ;;
         "Grub & Plymouth")

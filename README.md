@@ -64,6 +64,7 @@ Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then cl
 | ---------- | ------ |
 | `libutils`, `cpp_project_template` | `~/personal_delivery/cpp/` |
 | `skills` | `~/personal_delivery/other/skills` (used by the Custom Package & AI setups) |
+| `docker-image` | `~/personal_delivery/other/docker-image` |
 | Other links (one per line) | Chosen folder (default: `~/personal_delivery`) |
 
 > [!CAUTION]
