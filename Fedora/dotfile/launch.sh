@@ -6,6 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../utils.sh"
 
+REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 OMZ_URL="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
 # =========================
@@ -35,7 +36,10 @@ if [[ -f "$USER_HOME/.zshrc" ]] && ! cmp -s "$SCRIPT_DIR/.zshrc" "$USER_HOME/.zs
 fi
 run_as_user mkdir -p "$USER_HOME/.zsh/completions"
 run_as_user cp "$SCRIPT_DIR/.zshrc" "$USER_HOME/.zshrc"
-ok "Zshrc setup"
+
+# The dump alias points to this repository, wherever it was cloned
+run_as_user sed -i "s|^alias dump=.*|alias dump='\\\\sudo make -C \"$(escape_sed "$REPO_DIR")\"'|" "$USER_HOME/.zshrc"
+ok "Zshrc setup (dump -> $REPO_DIR)"
 
 if chsh -s "$(command -v zsh)" "$SUDO_USER" > /dev/null; then
     ok "Zsh is now the default shell"

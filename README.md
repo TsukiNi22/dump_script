@@ -19,7 +19,7 @@ sudo make
 ```
 
 > [!TIP]
-> Once the dotfiles are installed, the `dump` alias of the zshrc runs `sudo make -C ~/dump_script`.
+> Once the dotfiles are installed, the `dump` alias of the zshrc runs `sudo make` in this repository (path written by the Dotfile setup, wherever it was cloned).
 
 > [!NOTE]
 > Every setup is chosen from a `gum` menu and can also be run alone: `sudo bash Fedora/<setup>/launch.sh`.
