@@ -1,84 +1,96 @@
-command cd usb_lock_and_power_shutdown/
+#!/bin/bash
+# Usage: sudo bash usb_lock_and_power_shutdown/launch.sh [<vendor-id> <device-id> [<cancel-vendor-id> <cancel-device-id>]]
+# Lock the session when the usb is removed and/or power off when the charger is unplugged
+set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
+
+VENDOR_ID="${1:-}"
+DEVICE_ID="${2:-}"
+CANCEL_VENDOR_ID="${3:-}"
+CANCEL_DEVICE_ID="${4:-}"
+USB_RULE="/etc/udev/rules.d/80-usb-lock.rules"
+POWER_RULE="/etc/udev/rules.d/80-power-shutdown.rules"
+DETECTION_SCRIPT="/usr/local/bin/usb-lock_power-shutdown.sh"
+
+install_packages gum usbutils || exit 1
+
+# Action proposed for a rule: Activation when it isn't installed yet
 get_status() {
-    local file="$1"
-
-    if [[ ! -f "$file" ]]; then
-        echo "Activation"
+    if [[ -f "$1" ]]; then
+        echo "Deactivation"
     else
-        echo "Desactivation"
+        echo "Activation"
     fi
 }
 
-USB_RULE="/etc/udev/rules.d/80-usb-lock.rules"
-POWER_RULE="/etc/udev/rules.d/80-power-shutdown.rules"
+reload_rules() {
+    udevadm control --reload-rules
+    ok "Udev rules reloaded"
+}
 
-STATUS_USB=$(get_status "$USB_RULE")
-STATUS_POWER=$(get_status "$POWER_RULE")
-
-echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install gum -y
-echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
-echo -e "[${GREEN}OK${RESET}] Download Package"
-
-DEVICE_INFO=$(lsusb | grep "$1:$2")
-
-if [[ -n "$1" && -n "$2" && -n "$DEVICE_INFO" ]]; then
+if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
     CHOICE=$(gum choose \
-        "USB Lock ($STATUS_USB)" \
-        "Power Shutdown ($STATUS_POWER)" \
+        "USB Lock ($(get_status "$USB_RULE"))" \
+        "Power Shutdown ($(get_status "$POWER_RULE"))" \
         "Both (Activation)" \
-        "Both (Desactivation)" \
-        "Cancel" )
+        "Both (Deactivation)" \
+        "Cancel") || CHOICE="Cancel"
 else
-    CHOICE="Both (Desactivation)"
+    CHOICE="Both (Deactivation)"
 fi
 
-if [[ "$CHOICE" == "Cancel" ]]; then
+# =========================
+# Deactivation
+# =========================
+case "$CHOICE" in
+    "Cancel")
+        skipped "Usb lock & power shutdown"
+        exit 0
+        ;;
+    "USB Lock (Deactivation)")
+        rm -f "$USB_RULE"
+        ok "USB Lock rule removed"
+        ;;
+    "Power Shutdown (Deactivation)")
+        rm -f "$POWER_RULE"
+        ok "Power Shutdown rule removed"
+        ;;
+    "Both (Deactivation)")
+        rm -f "$USB_RULE" "$POWER_RULE"
+        ok "USB Lock & Power Shutdown rules removed"
+        ;;
+esac
+if [[ "$CHOICE" == *"(Deactivation)" ]]; then
+    if [[ ! -f "$USB_RULE" && ! -f "$POWER_RULE" ]]; then
+        rm -f "$DETECTION_SCRIPT"
+        ok "Detection script removed"
+    fi
+    reload_rules
     exit 0
 fi
 
-if [[ "$CHOICE" == "Both (Desactivation)" || "$CHOICE" == "USB Lock (Desactivation)" || "$CHOICE" == "Power Shutdown (Desactivation)" ]]; then
-    if [[ "$CHOICE" == "Both (Desactivation)" || ( "$CHOICE" == "USB Lock (Desactivation)" && ! -f "$POWER_RULE" ) || ( "$CHOICE" == "Power Shutdown (Desactivation)" && ! -f "$USB_RULE" ) ]]; then
-        command rm -f /usr/local/bin/usb-lock.sh
-        echo -e "[${GREEN}OK${RESET}] Detection script removed"
-    fi
-
-    if [[ "$CHOICE" == "Both (Desactivation)" || "$CHOICE" == "USB Lock (Desactivation)" ]]; then
-        command rm -f "$USB_RULE"
-        echo -e "[${GREEN}OK${RESET}] USB Lock rules removed"
-    fi
-
-    if [[ "$CHOICE" == "Both (Desactivation)" || "$CHOICE" == "Power Shutdown (Desactivation)" ]]; then
-        command rm -f "$POWER_RULE"
-        echo -e "[${GREEN}OK${RESET}] Power rules disabled"
-    fi
-
-    exit 0
-fi
-
-if [[ -z "$1" || -z "$2" || -z "$DEVICE_INFO" ]]; then
-    echo -e "[${RED}FAILED${RESET}] Insufficiant information to setup the USB & Power detection script"
+# =========================
+# Activation
+# =========================
+if ! bash "$SCRIPT_DIR/set-file.sh" "$CANCEL_VENDOR_ID" "$CANCEL_DEVICE_ID"; then
+    failed "Setup of the USB & Power detection script"
     exit 1
 fi
-
-command sh set-file.sh "$1" "$2" "$3" "$4"
-if [[ $? -eq 1 ]]; then
-    echo -e "[${RED}FAILED${RESET}] Setup of the USB & Power detection script"
-    exit 1
-fi
-echo -e "[${GREEN}OK${RESET}] Setup of the USB & Power detection script"
 
 if [[ "$CHOICE" == "Both (Activation)" || "$CHOICE" == "USB Lock (Activation)" ]]; then
-    command cp 80-usb-lock.rules tmp_80-usb-lock.rules
-    command sed -i "s/VENDOR_IDV/$1/g" "tmp_80-usb-lock.rules"
-    command sed -i "s/DEVICE_IDV/$2/g" "tmp_80-usb-lock.rules"
-    echo -e "[${GREEN}OK${RESET}] Set the variable for the USB Lock rule"
-    command mv tmp_80-usb-lock.rules "$USB_RULE"
-    echo -e "[${GREEN}OK${RESET}] USB Lock rules file setup"
+    tmp_rule=$(mktemp)
+    trap 'rm -f "$tmp_rule"' EXIT
+    sed -e "s|VENDOR_IDV|$(escape_sed "$VENDOR_ID")|g" \
+        -e "s|DEVICE_IDV|$(escape_sed "$DEVICE_ID")|g" \
+        "$SCRIPT_DIR/80-usb-lock.rules" > "$tmp_rule"
+    install_root_file 644 "$tmp_rule" "$USB_RULE"
+    ok "USB Lock rule setup"
 fi
 
 if [[ "$CHOICE" == "Both (Activation)" || "$CHOICE" == "Power Shutdown (Activation)" ]]; then
-    command cp -f 80-power-shutdown.rules "$POWER_RULE"
-    echo -e "[${GREEN}OK${RESET}] Power Shutdown rules file setup"
+    install_root_file 644 "$SCRIPT_DIR/80-power-shutdown.rules" "$POWER_RULE"
+    ok "Power Shutdown rule setup"
 fi
+reload_rules

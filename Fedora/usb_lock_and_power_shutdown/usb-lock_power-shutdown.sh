@@ -1,20 +1,26 @@
 #!/bin/bash
+# Usage: usb-lock_power-shutdown.sh lock|shutdown (run by the udev rules)
+# Lock & suspend (usb removed) or power off (charger unplugged), unless the cancel usb is plugged
+# (CANCEL_VENDOR_IDV / CANCEL_DEVICE_IDV / WHOAMI are replaced at the installation, empty = no cancel usb)
+set -euo pipefail
 
-# Variables
-CANCEL_USB_VENDOR_ID="CANCEL_VENDOR_IDV"
-CANCEL_USB_MODEL_ID="CANCEL_DEVICE_IDV"
+CANCEL_VENDOR_ID="CANCEL_VENDOR_IDV"
+CANCEL_DEVICE_ID="CANCEL_DEVICE_IDV"
 
-# Récupérer la session de l'utilisateur
-session=$(loginctl | grep 'WHOAMI' | awk '{print $1;}')
-SCREEN_LOCKED=$(loginctl show-session $(loginctl | grep 'WHOAMI' | awk '{print $1}') -p LockedHint | cut -d'=' -f2)
-# Vérifier l'argument passé au script
-if ! lsusb | grep -q "${CANCEL_USB_VENDOR_ID}:${CANCEL_USB_MODEL_ID}"; then
-	if [ "$1" == "lock" ]; then
-	    # Verrouiller la session et mettre en veille
-	    loginctl lock-session ${session}
-	    systemctl suspend
-	elif [ "$1" == "shutdown" ] ; then
-	    # Éteindre le PC
-	    systemctl poweroff
-	fi
+if [[ -n "$CANCEL_VENDOR_ID" && -n "$CANCEL_DEVICE_ID" ]] \
+    && lsusb -d "$CANCEL_VENDOR_ID:$CANCEL_DEVICE_ID" > /dev/null 2>&1; then
+    exit 0
 fi
+
+case "${1:-}" in
+    lock)
+        session=$(loginctl list-sessions --no-legend | awk '$3 == "WHOAMI" && $6 == "user" {print $1; exit}')
+        if [[ -n "$session" ]]; then
+            loginctl lock-session "$session"
+        fi
+        systemctl suspend
+        ;;
+    shutdown)
+        systemctl poweroff
+        ;;
+esac
