@@ -31,7 +31,7 @@ format() {
         "System Update")
             title "System Update"
             echo "Runs on the loading screen at launch, run it again from here:"
-            echo "  - dnf update"
+            echo "  - system update (dnf / apt / pacman)"
             echo "  - packages of the menu: gum, fzf, usbutils, less, curl"
             ;;
         "Pam Usb"*)
@@ -106,7 +106,8 @@ format() {
         "Custom Package & Binary")
             title "Custom Package & Binary"
             echo "Choose one or both:"
-            echo "  - libutils: TsukiNi22 rpm mirror + every build (optimized, debug, asan + headers)"
+            echo "  - libutils: TsukiNi22 rpm / deb mirror (built from the sources on arch),"
+            echo "    every build (optimized, debug, asan + headers)"
             echo "  - xstyle: coding style checker, built from the skills repository into ~/.local/bin"
             note "xstyle needs libutils: select both on a fresh machine"
             ;;

@@ -60,10 +60,22 @@ cp -r "$theme_path" "$PLYMOUTH_THEMES/"
 restorecon -R "$PLYMOUTH_THEMES/$theme_name" 2> /dev/null || true
 ok "Plymouth theme copied"
 
-# -R regenerates the initramfs (can take a while)
+# The initramfs embeds the theme: regenerated (can take a while)
+# fedora: dracut / debian: update-initramfs (both through -R), arch: mkinitcpio
 info "Start regeneration of the initramfs"
-if ! plymouth-set-default-theme -R "$theme_name"; then
+case "$OS_FAMILY" in
+    arch) plymouth-set-default-theme "$theme_name" && mkinitcpio -P ;;
+    *) plymouth-set-default-theme -R "$theme_name" ;;
+esac || {
     failed "Plymouth theme selection ($theme_name)"
     exit 1
-fi
+}
 ok "Plymouth setup ($theme_name)"
+
+# Boot config left to the user (a wrong edit can break the boot)
+if [[ "$OS_FAMILY" == "arch" ]] && ! grep -q "^HOOKS=.*plymouth" /etc/mkinitcpio.conf; then
+    warning "Add 'plymouth' to HOOKS in /etc/mkinitcpio.conf, then run: mkinitcpio -P"
+fi
+if [[ "$OS_FAMILY" != "rpm" ]] && ! grep -q "splash" /proc/cmdline; then
+    warning "Add 'quiet splash' to the kernel parameters (GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub)"
+fi

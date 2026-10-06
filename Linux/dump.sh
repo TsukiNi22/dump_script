@@ -128,7 +128,7 @@ select_usbs() {
 task_update() {
     section "UPDATE"
     box_open "UPDATE-PACKAGE"
-    if ! dnf update -y; then
+    if ! pkg_update; then
         box_close "UPDATE-PACKAGE"
         failed "Update package"
         return 1
@@ -202,10 +202,14 @@ menu_entries() {
     if [[ -n "$vendor_id" ]]; then
         usb_keys="${GREY}(main: $vendor_id:$device_id, cancel: ${cancel_vendor_id:-none}:${cancel_device_id:-none})${RESET}"
     fi
+    local pam_state="$usb_state"
+    if [[ "$OS_FAMILY" != "rpm" ]]; then
+        pam_state=" ${GREY}(fedora-like only)${RESET}"
+    fi
     printf '%s\n' \
         "System Update" \
         "Usb Keys $usb_keys" \
-        "Pam Usb$usb_state" \
+        "Pam Usb$pam_state" \
         "Usb Lock & Power Shutdown$usb_state" \
         "Screen Of Intruder$usb_state" \
         "Dotfile" \
@@ -512,6 +516,7 @@ loading_screen() {
     local log="$DUMP_STATE_DIR/System_Update.log"
     local status=0
     local line
+    local subtitle
 
     columns=$(tput cols)
     lines=$(tput lines)
@@ -522,7 +527,8 @@ loading_screen() {
     for line in "${BANNER[@]}"; do
         center_on "$columns" "$BANNER_WIDTH" "${MAGENTA}${BOLD}$line${RESET}"
     done
-    center_on "$columns" 31 "${GREY}Fedora dump script - by Tsukini${RESET}"
+    subtitle="Linux dump script ($OS_NAME) - by Tsukini"
+    center_on "$columns" "${#subtitle}" "${GREY}$subtitle${RESET}"
     echo
     center_on "$columns" "$width" "${GREY}$(repeat "─" "$width")${RESET}"
     top=$((${#BANNER[@]} + 5))
@@ -580,10 +586,6 @@ esac
 # =========================
 # Program
 # =========================
-if ! grep -q "^ID=fedora" /etc/os-release; then
-    failed "This script must be run on Fedora"
-    exit 1
-fi
 DUMP_STATE_DIR=$(mktemp -d)
 export DUMP_STATE_DIR
 # ctrl-c (forced quit): stop the running task (own process group from setsid) before removing the state

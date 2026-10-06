@@ -1,11 +1,21 @@
-# Dump Script for Fedora
+# Dump Script for Linux
 
 ### Script to automatically set Pam Usb / Usb Lock & Power Shutdown / Screen Of Intruder / Dotfile / Package & App / Custom Package & Binary / AI / Git / Grub & Plymouth
 
 ![image](https://github.com/user-attachments/assets/397c929e-ab0b-4994-8f5c-cf8edadd4b42)
 
 > [!WARNING]
-> Fedora only, the script must be run with `sudo` from the user account (the config files belong to `$SUDO_USER`).
+> The script must be run with `sudo` from the user account (the config files belong to `$SUDO_USER`).
+
+| Family | Distributions (`ID` / `ID_LIKE` of `/etc/os-release`) | Packages |
+| ------ | ------------------------------------------------------ | -------- |
+| fedora-like | Fedora, RHEL, CentOS, Rocky, Alma... | `dnf` |
+| debian-like | Debian, Ubuntu, Mint, Pop!_OS... | `apt` |
+| arch-like | Arch, Manjaro, EndeavourOS... | `pacman` |
+
+> [!NOTE]
+> The package names are translated for each family, a package missing from the repositories of the distribution is
+> reported and skipped. `Pam Usb` is fedora-like only (it replaces the `authselect` pam files).
 
 Clone the repository:
 ```bash
@@ -25,7 +35,7 @@ sudo make
 > A loading screen runs the system update (fixed title, logs below), then everything runs in one `fzf` window: a
 > setup runs in the background with its output shown live on the right (details, status and output of its last
 > run, `ctrl-l`: whole output), and its questions are asked in the list of the window. Every setup can also be run
-> alone (`gum` prompts): `sudo bash Fedora/<setup>/launch.sh`.
+> alone (`gum` prompts, `fzf` without gum): `sudo bash Linux/<setup>/launch.sh`.
 
 ## Content of Dotfile, Package & App, Custom Package & AI
 
@@ -48,7 +58,7 @@ sudo make
 ### Custom Package & Binary
 | Name | Content |
 | ---- | ------- |
-| [`libutils`](https://github.com/TsukiNi22/libutils) | TsukiNi22 rpm mirror, every build (optimized, debug, asan + headers) |
+| [`libutils`](https://github.com/TsukiNi22/libutils) | TsukiNi22 rpm / deb mirror (built from the sources on arch), every build (optimized, debug, asan + headers) |
 | `xstyle` | Coding style checker of the [skills](https://github.com/TsukiNi22/skills) repository (`~/.local/bin`) |
 
 ### AI

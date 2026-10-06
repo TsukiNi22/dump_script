@@ -11,6 +11,14 @@ DEVICE_ID="${2:-}"
 PAM_USB_REPO="https://github.com/mcdope/pam_usb.git"
 PAM_USB_MODULE="/usr/lib64/security/pam_usb.so"
 
+# The auth files of this setup are the authselect ones of fedora: other families have another pam stack
+# (debian: common-auth, arch: system-auth) -> replacing it could block every login !!!
+if [[ "$OS_FAMILY" != "rpm" ]]; then
+    warning "Pam usb only supports fedora-like systems (authselect pam files), not $OS_NAME"
+    skipped "Pam usb"
+    exit 0
+fi
+
 install_packages gum gcc make git python3 pkgconf-pkg-config pam-devel libxml2-devel glib2-devel \
     udisks-devel libudisks2-devel libevdev-devel || exit 1
 

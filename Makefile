@@ -1,27 +1,17 @@
 ##
 ## DUMP SCRIPT PROJECT, 2024
-## dump script (Fedora)
+## dump script (fedora-like / debian-like / arch-like)
 ## File description:
 ## Makefile to start sh script
 ##
 
 .SILENT:
 
-# Color definition
-RED = \033[31m
-RESET = \033[0m
-
-OS := $(shell grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
-
+# The distribution is checked by Linux/utils.sh (fedora-like, debian-like or arch-like)
 all: launch
 
-# The whole dump runs in the window of Fedora/dump.sh
+# The whole dump runs in the window of Linux/dump.sh
 launch:
-	if [ "$(OS)" = "fedora" ]; then \
-		$(MAKE) --no-print-directory -C Fedora || exit 1; \
-	else \
-		printf "[$(RED)ERROR$(RESET)] Unsupported OS: $(OS)\n"; \
-		exit 1; \
-	fi
+	$(MAKE) --no-print-directory -C Linux
 
 .PHONY: all launch

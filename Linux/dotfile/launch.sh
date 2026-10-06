@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../utils.sh"
 
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+FASTFETCH_DEB_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-$(dpkg --print-architecture 2> /dev/null || echo amd64).deb"
 OMZ_URL="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
 # =========================
@@ -15,6 +16,18 @@ OMZ_URL="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.
 # tree-sitter-cli + gcc: build of the nvim-treesitter parsers, util-linux-user: chsh
 install_packages vim-enhanced neovim git gcc tree-sitter-cli fastfetch chafa \
     zsh zoxide sl tmux curl util-linux-user || exit 1
+
+# fastfetch isn't in the old debian-like repositories (ex: ubuntu 24.04): official .deb of its releases
+if ! command -v fastfetch > /dev/null && [[ "$OS_FAMILY" == "deb" ]]; then
+    fastfetch_deb=$(mktemp --suffix=.deb)
+    if curl -fsSL -o "$fastfetch_deb" "$FASTFETCH_DEB_URL" \
+        && DEBIAN_FRONTEND=noninteractive apt-get install -y "$fastfetch_deb"; then
+        ok "Fastfetch installed from its github release"
+    else
+        warning "Fastfetch can't be installed: the fastfetch alias of the zshrc won't work"
+    fi
+    rm -f "$fastfetch_deb"
+fi
 
 # =========================
 # Zsh

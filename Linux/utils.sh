@@ -1,5 +1,6 @@
 #!/bin/bash
-# Shared helpers of the Fedora setup scripts (sourced only, never executed)
+# Shared helpers of the setup scripts (sourced only, never executed)
+# Supported: fedora-like (dnf), debian-like (apt), arch-like (pacman)
 set -euo pipefail
 
 # =========================
@@ -211,7 +212,14 @@ ask_choose() {
         set -- "$@" "Cancel"
     fi
 
-    if ! in_menu; then
+    if ! in_menu && ! command -v gum > /dev/null; then
+        # No gum (not in the debian repositories): fzf
+        if [[ "$multi" == true ]]; then
+            answer=$(printf '%s\n' "$@" | fzf --multi --header "$header (tab: toggle)" --height ~50%) || return 1
+        else
+            answer=$(printf '%s\n' "$@" | fzf --header "$header" --height ~50%) || return 1
+        fi
+    elif ! in_menu; then
         if [[ "$multi" == true ]]; then
             answer=$(gum choose --no-limit --selected="$selected" --header "$header" "$@") || return 1
         else
@@ -236,6 +244,13 @@ ask_choose() {
 
 # Ask a text: ask_input <header> [default]
 ask_input() {
+    local answer
+
+    if ! in_menu && ! command -v gum > /dev/null; then
+        read -r -e -i "${2:-}" -p "$1 " answer < /dev/tty || return 1
+        echo "$answer"
+        return 0
+    fi
     if ! in_menu; then
         gum input --placeholder "$1" --value "${2:-}"
         return
@@ -245,6 +260,13 @@ ask_input() {
 
 # Ask several values (one per line in the answer): ask_write <header>
 ask_write() {
+    local answer
+
+    if ! in_menu && ! command -v gum > /dev/null; then
+        read -r -e -p "$1 (separated by spaces) " answer < /dev/tty || return 1
+        tr -s ' ' '\n' <<< "$answer"
+        return 0
+    fi
     if ! in_menu; then
         gum write --height=10 --placeholder "$1 (one per line, ctrl+d to validate)"
         return
@@ -255,12 +277,113 @@ ask_write() {
 # =========================
 # Tools
 # =========================
+# =========================
+# Packages
+# =========================
+# Name of a package on this family, from its fedora name (empty = not in the repositories of the family)
+pkg_name() {
+    case "$OS_FAMILY:$1" in
+        rpm:gpg) echo "gnupg2" ;;
+        arch:gpg) echo "gnupg" ;;
+        rpm:*) echo "$1" ;;
+        # debian-like
+        deb:vim-enhanced) echo "vim" ;;
+        deb:gcc-c++) echo "g++" ;;
+        deb:gtest-devel) echo "libgtest-dev" ;;
+        deb:xeyes) echo "x11-apps" ;;
+        deb:moby-engine) echo "docker.io" ;;
+        deb:CSFML-devel) echo "libcsfml-dev" ;;
+        deb:openssl-devel) echo "libssl-dev" ;;
+        deb:pkgconf-pkg-config) echo "pkg-config" ;;
+        deb:pam-devel) echo "libpam0g-dev" ;;
+        deb:libxml2-devel) echo "libxml2-dev" ;;
+        deb:glib2-devel) echo "libglib2.0-dev" ;;
+        deb:libudisks2-devel) echo "libudisks2-dev" ;;
+        deb:libevdev-devel) echo "libevdev-dev" ;;
+        deb:openssh-clients) echo "openssh-client" ;;
+        deb:grub2-tools) echo "grub-common" ;;
+        deb:plymouth-system-theme) echo "plymouth-themes" ;;
+        deb:util-linux-user|deb:dnf-plugins-core|deb:CSFML|deb:udisks-devel|deb:dracut|deb:grub2-common) ;;
+        deb:plymouth-scripts|deb:plymouth-plugin-script) ;;
+        # arch-like
+        arch:vim-enhanced) echo "vim" ;;
+        arch:gcc-c++) echo "gcc" ;;
+        arch:gh) echo "github-cli" ;;
+        arch:gtest-devel) echo "gtest" ;;
+        arch:python3) echo "python" ;;
+        arch:python3-pip) echo "python-pip" ;;
+        arch:xeyes) echo "xorg-xeyes" ;;
+        arch:moby-engine) echo "docker" ;;
+        arch:CSFML) echo "csfml" ;;
+        arch:wireshark) echo "wireshark-qt" ;;
+        arch:fswebcam) echo "ffmpeg" ;; # fswebcam is only in the AUR: ffmpeg takes the pictures
+        arch:openssl-devel) echo "openssl" ;;
+        arch:pkgconf-pkg-config) echo "pkgconf" ;;
+        arch:pam-devel) echo "pam" ;;
+        arch:libxml2-devel) echo "libxml2" ;;
+        arch:glib2-devel) echo "glib2" ;;
+        arch:libudisks2-devel) echo "udisks2" ;;
+        arch:libevdev-devel) echo "libevdev" ;;
+        arch:openssh-clients) echo "openssh" ;;
+        arch:grub2-tools) echo "grub" ;;
+        arch:util-linux-user|arch:dnf-plugins-core|arch:CSFML-devel|arch:udisks-devel|arch:dracut) ;;
+        arch:grub2-common|arch:plymouth-scripts|arch:plymouth-plugin-script|arch:plymouth-system-theme) ;;
+        arch:asciiquarium) ;; # AUR only
+        *) echo "$1" ;;
+    esac
+}
+
+# Check that a package exists in the repositories of the family
+pkg_available() {
+    case "$OS_FAMILY" in
+        rpm) dnf -q list --available "$1" > /dev/null 2>&1 || rpm -q "$1" > /dev/null 2>&1 ;;
+        deb) [[ -n "$(apt-cache policy "$1" 2> /dev/null | grep 'Candidate:' | grep -v '(none)')" ]] ;;
+        arch) pacman -Si "$1" > /dev/null 2>&1 || pacman -Q "$1" > /dev/null 2>&1 ;;
+    esac
+}
+
+# Update every installed package
+pkg_update() {
+    case "$OS_FAMILY" in
+        rpm) dnf update -y ;;
+        deb) apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade ;;
+        arch) pacman -Syu --noconfirm ;;
+    esac
+}
+
+# Install packages (fedora names, translated for the family), the missing ones are reported and skipped
+pkg_install() {
+    local package
+    local name
+    local -a names=()
+
+    for package in "$@"; do
+        name=$(pkg_name "$package")
+        if [[ -z "$name" ]]; then
+            continue
+        fi
+        if [[ "$package" == http* ]] || pkg_available "$name"; then
+            names+=("$name")
+        else
+            warning "$name is not in the $OS_FAMILY repositories: skipped"
+        fi
+    done
+    if [[ ${#names[@]} -eq 0 ]]; then
+        return 0
+    fi
+    case "$OS_FAMILY" in
+        rpm) dnf install -y "${names[@]}" ;;
+        deb) DEBIAN_FRONTEND=noninteractive apt-get install -y "${names[@]}" ;;
+        arch) pacman -S --needed --noconfirm "${names[@]}" ;;
+    esac
+}
+
 # Install packages inside a box, return 1 on failure
 install_packages() {
     local status=0
 
     box_open "DOWNLOAD-PACKAGE"
-    dnf install -y "$@" || status=1
+    pkg_install "$@" || status=1
     box_close "DOWNLOAD-PACKAGE"
     if [[ "$status" -ne 0 ]]; then
         failed "Download package ($*)"
@@ -324,6 +447,28 @@ usb_is_plugged() {
 # =========================
 # Checks
 # =========================
+# Family of the distribution: rpm (fedora-like), deb (debian-like), arch (arch-like)
+os_family() {
+    local id=""
+    local id_like=""
+
+    # shellcheck disable=SC1091
+    id=$(. /etc/os-release && echo "${ID:-}")
+    id_like=$(. /etc/os-release && echo "${ID_LIKE:-}")
+    case " $id $id_like " in
+        *" fedora "*|*" rhel "*|*" centos "*) echo "rpm" ;;
+        *" debian "*|*" ubuntu "*) echo "deb" ;;
+        *" arch "*) echo "arch" ;;
+        *) echo "unknown" ;;
+    esac
+}
+
+OS_FAMILY="${OS_FAMILY:-$(os_family)}"
+OS_NAME=$(. /etc/os-release && echo "${PRETTY_NAME:-$ID}")
+if [[ "$OS_FAMILY" == "unknown" ]]; then
+    failed "Unsupported distribution ($OS_NAME): fedora-like, debian-like or arch-like only"
+    exit 1
+fi
 if [[ $EUID -ne 0 || -z "${SUDO_USER:-}" || "${SUDO_USER:-}" == "root" ]]; then
     failed "The setup must be run with sudo from the user account (sudo make)"
     exit 1

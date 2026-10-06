@@ -17,7 +17,12 @@ screen_locked=$(loginctl show-session "$session" -p LockedHint --value)
 
 if [[ "$screen_locked" == "yes" ]] && ! lsusb -d "$VENDOR_ID:$DEVICE_ID" > /dev/null 2>&1; then
     mkdir -p "$OUTPUT_DIR"
-    fswebcam -q -r 1280x720 --jpeg 85 -D 1 "$PHOTO_NAME"
+    # fswebcam (fedora / debian), ffmpeg on arch (fswebcam only in the AUR)
+    if command -v fswebcam > /dev/null; then
+        fswebcam -q -r 1280x720 --jpeg 85 -D 1 "$PHOTO_NAME"
+    else
+        ffmpeg -loglevel error -f v4l2 -video_size 1280x720 -i /dev/video0 -frames:v 1 -y "$PHOTO_NAME"
+    fi
     # The names hold the date -> sorted by name = from the oldest
     if [[ "$MAX_PICTURES" -gt 0 ]]; then
         find "$OUTPUT_DIR" -maxdepth 1 -name 'intruder_*.jpg' | sort | head -n -"$MAX_PICTURES" | xargs -r rm -f
