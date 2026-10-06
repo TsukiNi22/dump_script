@@ -522,6 +522,8 @@ BANNER=(
 )
 BANNER_WIDTH=63
 LOADING_LOG_WIDTH=90  # Max width of the logs under the title
+PRESS_SHADES=(245 244 243 242 241 240 240 241 242 243 244 245 245) # Greys of the "press any key" (light -> dark -> light)
+PRESS_SHADE_DELAY=0.12 # Seconds per shade
 
 # Print <text> (display width <width>) centered on <columns>
 center_on() {
@@ -534,12 +536,20 @@ press_any_key() {
     local margin="$1"
     local result="$2"
     local key
+    local shade
 
     # Keys typed during the loading don't count
     while read -rsn 1 -t 0.01 key < /dev/tty; do :; done
     echo "$margin  $result"
-    printf '%s  %s' "$margin" "${GREY}Press any key to continue...${RESET}"
-    read -rsn 1 key < /dev/tty || true
+    # Light blink: the grey breathes between a few shades (256 colors), rewritten in place until a key
+    while true; do
+        for shade in "${PRESS_SHADES[@]}"; do
+            printf '\r%s  \033[38;5;%sm%s%s' "$margin" "$shade" "Press any key to continue..." "$RESET"
+            if read -rsn 1 -t "$PRESS_SHADE_DELAY" key < /dev/tty; then
+                return 0
+            fi
+        done
+    done
 }
 
 # Fixed centered title at the top, the update logs scroll below it (terminal scroll region)
