@@ -500,11 +500,59 @@ BANNER=(
     "╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝"
 )
 BANNER_WIDTH=63
-LOADING_LOG_WIDTH=90 # Max width of the logs under the title
+LOADING_LOG_WIDTH=90  # Max width of the logs under the title
+PRESS_BOX_WIDTH=31    # Width of the "press any key" box
+PRESS_BLINK_DELAY=0.6 # Seconds between two blinks
 
 # Print <text> (display width <width>) centered on <columns>
 center_on() {
     printf '%*s%s\n' $((($1 - $2) / 2)) "" "$3"
+}
+
+# Line of the box: │ <text centered> │ (<width> = display width of the text)
+box_line() {
+    local inner=$((PRESS_BOX_WIDTH - 2))
+    local left=$(((inner - $2) / 2))
+
+    printf '%s│%*s%s%*s│%s' "$CYAN" "$left" "" "${RESET}$1${CYAN}" $((inner - $2 - left)) "" "$RESET"
+}
+
+# Box over the logs (they stay behind), title + "PRESS ANY KEY" blinking like an arcade machine until a key
+# press_any_key <columns> <top of the logs> <lines> <title> <title width>
+press_any_key() {
+    local columns="$1"
+    local row=$((($2 + $3) / 2 - 2))
+    local col=$((($1 - PRESS_BOX_WIDTH) / 2))
+    local title="$4"
+    local title_width="$5"
+    local visible=true
+    local key
+
+    # Keys typed during the loading don't count
+    while read -rsn 1 -t 0.01 key < /dev/tty; do :; done
+    tput cup "$row" "$col"
+    printf '%s╭%s╮%s' "$CYAN" "$(repeat "─" $((PRESS_BOX_WIDTH - 2)))" "$RESET"
+    tput cup $((row + 1)) "$col"
+    box_line "" 0
+    tput cup $((row + 2)) "$col"
+    box_line "$title" "$title_width"
+    tput cup $((row + 4)) "$col"
+    box_line "" 0
+    tput cup $((row + 5)) "$col"
+    printf '%s╰%s╯%s' "$CYAN" "$(repeat "─" $((PRESS_BOX_WIDTH - 2)))" "$RESET"
+    while true; do
+        tput cup $((row + 3)) "$col"
+        if [[ "$visible" == true ]]; then
+            box_line "${MAGENTA}${BOLD}▶ PRESS ANY KEY ◀${RESET}" 17
+            visible=false
+        else
+            box_line "" 0
+            visible=true
+        fi
+        if read -rsn 1 -t "$PRESS_BLINK_DELAY" key < /dev/tty; then
+            break
+        fi
+    done
 }
 
 # Fixed centered title at the top, the update logs scroll below it (terminal scroll region)
@@ -543,14 +591,10 @@ loading_screen() {
         render_log full || status=1
     if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
         echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        echo
-        center_on "$columns" 44 "${RED}${BOLD}✘ Update failed${RESET} ${GREY}- press a key to continue${RESET}"
-        read -rsn 1 < /dev/tty || true
+        press_any_key "$columns" "$top" "$lines" "${RED}${BOLD}✘ UPDATE FAILED${RESET}" 15
     else
         echo "OK SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        echo
-        center_on "$columns" 7 "${GREEN}${BOLD}✔ Ready${RESET}"
-        sleep 1
+        press_any_key "$columns" "$top" "$lines" "${GREEN}${BOLD}✔ READY${RESET}" 7
     fi
     echo "System_Update" > "$DUMP_STATE_DIR/last"
     printf '\033[r'
