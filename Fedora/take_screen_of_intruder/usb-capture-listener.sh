@@ -1,7 +1,8 @@
 #!/bin/bash
+# Check the usb & the lock state every second (see check-usb-and-capture.sh)
+set -euo pipefail
 
-# Script to continuously check for USB status and capture screen if necessary
 while true; do
-    /usr/local/bin/check-usb-and-capture.sh
+    /usr/local/bin/check-usb-and-capture.sh || true
     sleep 1
 done

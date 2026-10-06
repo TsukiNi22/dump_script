@@ -1,12 +1,10 @@
 [Unit]
 Description=USB Capture Listener
 After=display-manager.service
-	
+
 [Service]
 ExecStart=/usr/local/bin/usb-capture-listener.sh
 User=WHOAMI
-Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/WHOAMI/.Xauthority
 Restart=always
 
 [Install]

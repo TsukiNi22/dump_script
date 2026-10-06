@@ -1,27 +1,35 @@
-command cd take_screen_of_intruder/
+#!/bin/bash
+# Usage: sudo bash take_screen_of_intruder/set-file.sh <vendor-id> <device-id>
+# Install the capture scripts and start the usb-capture service for the user
+set -euo pipefail
 
-command cp check-usb-and-capture.sh tmp_check-usb-and-capture.sh
-command sed -i "s/VENDOR_IDV/$1/g" "tmp_check-usb-and-capture.sh"
-command sed -i "s/DEVICE_IDV/$2/g" "tmp_check-usb-and-capture.sh"
-command sed -i "s/WHOAMI/$SUDO_USER/g" "tmp_check-usb-and-capture.sh"
-echo -e "[${GREEN}OK${RESET}] Set of the file check-usb-and-capture.sh variable"
-command mv tmp_check-usb-and-capture.sh /usr/local/bin/check-usb-and-capture.sh
-echo -e "[${GREEN}OK${RESET}] Usb-And-Capture file setup"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
 
-command cp usb-capture-listener.sh /usr/local/bin//usb-capture-listener.sh
-echo -e "[${GREEN}OK${RESET}] Usb-Capture-Listener file setup"
+VENDOR_ID="${1:?Error: missing vendor-id}"
+DEVICE_ID="${2:?Error: missing device-id}"
+SERVICE="usb-capture.service"
+BIN_DIR="/usr/local/bin"
 
-command cp usb-capture.service tmp_usb-capture.service
-command sed -i "s/WHOAMI/$SUDO_USER/g" "tmp_usb-capture.service"
-echo -e "[${GREEN}OK${RESET}] Set of the file usb-capture.service variable"
-command mv tmp_usb-capture.service /etc/systemd/system/usb-capture.service 
-echo -e "[${GREEN}OK${RESET}] Usb-Capture service setup"
+tmp_file=$(mktemp)
+trap 'rm -f "$tmp_file"' EXIT
 
-command systemctl daemon-reexec
-command systemctl daemon-reload
-echo -e "[${GREEN}OK${RESET}] Service reload"
+sed -e "s|VENDOR_IDV|$(escape_sed "$VENDOR_ID")|g" \
+    -e "s|DEVICE_IDV|$(escape_sed "$DEVICE_ID")|g" \
+    -e "s|WHOAMI|$(escape_sed "$SUDO_USER")|g" \
+    -e "s|USER_HOME|$(escape_sed "$USER_HOME")|g" \
+    "$SCRIPT_DIR/check-usb-and-capture.sh" > "$tmp_file"
+install_root_file 755 "$tmp_file" "$BIN_DIR/check-usb-and-capture.sh"
+ok "Usb-And-Capture script setup"
 
-command restorecon -v /etc/systemd/system/usb-capture.service
-command systemctl enable usb-capture.service
-command systemctl start usb-capture.service
-echo -e "[${GREEN}OK${RESET}] Start of the Usb-Capture service"
+install_root_file 755 "$SCRIPT_DIR/usb-capture-listener.sh" "$BIN_DIR/usb-capture-listener.sh"
+ok "Usb-Capture-Listener script setup"
+
+sed "s|WHOAMI|$(escape_sed "$SUDO_USER")|g" "$SCRIPT_DIR/$SERVICE" > "$tmp_file"
+install_root_file 644 "$tmp_file" "/etc/systemd/system/$SERVICE"
+ok "Usb-Capture service setup"
+
+systemctl daemon-reload
+systemctl enable "$SERVICE"
+systemctl restart "$SERVICE"
+ok "Start of the Usb-Capture service"

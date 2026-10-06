@@ -1,27 +1,36 @@
-echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install gum fswebcam -y
-echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
-echo -e "[${GREEN}OK${RESET}] Download Package"
+#!/bin/bash
+# Usage: sudo bash take_screen_of_intruder/launch.sh [<vendor-id> <device-id>]
+# Take a webcam picture when the screen is locked and the usb is unplugged (deactivate it without usb)
+set -euo pipefail
 
-DEVICE_INFO=$(lsusb | grep "$1:$2")
-if [ ! -s "$1" ] && [ ! -z "$2" ] && [ ! -z "$DEVICE_INFO" ]; then
-    CHOICE=$(gum choose "Activate" "Desactivate")
-fi
-if [ -z "$1" ] || [ -z "$2" ] || [ -z "$DEVICE_INFO" ] || [ "$CHOICE" = "Desactivate" ]; then
-    command rm -f /usr/local/bin/check-usb-and-capture.sh
-    echo -e "[${GREEN}OK${RESET}] Usb-And-Capture remove"
-    command rm -f /usr/local/bin/usb-capture-listener.sh
-    echo -e "[${GREEN}OK${RESET}] Usb-Capture-Listener remove"
-    command rm -f /etc/systemd/system/usb-capture.service 
-    echo -e "[${GREEN}OK${RESET}] Usb-Capture service remove"
-    command systemctl daemon-reexec
-    command systemctl daemon-reload
-    echo -e "[${GREEN}OK${RESET}] Service reload"
-    exit 0
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
 
-command sh take_screen_of_intruder/set-file.sh $1 $2
-if [ $? -eq 1 ]; then
-    echo -e "[${RED}FAILED${RESET}] Setup Of Take Screen Of Intruder File"
+VENDOR_ID="${1:-}"
+DEVICE_ID="${2:-}"
+SERVICE="usb-capture.service"
+BIN_DIR="/usr/local/bin"
+
+install_packages gum fswebcam usbutils || exit 1
+
+deactivate() {
+    systemctl disable --now "$SERVICE" 2> /dev/null || true
+    rm -f "/etc/systemd/system/$SERVICE" "$BIN_DIR/check-usb-and-capture.sh" "$BIN_DIR/usb-capture-listener.sh"
+    systemctl daemon-reload
+    ok "Usb-Capture service & scripts removed"
+}
+
+CHOICE="Deactivate"
+if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
+    CHOICE=$(gum choose "Activate" "Deactivate") || CHOICE="Cancel"
+fi
+case "$CHOICE" in
+    "Activate") ;;
+    "Deactivate") deactivate; exit 0 ;;
+    *) skipped "Screen of intruder"; exit 0 ;;
+esac
+
+if ! bash "$SCRIPT_DIR/set-file.sh" "$VENDOR_ID" "$DEVICE_ID"; then
+    failed "Setup of take screen of intruder file"
     exit 1
 fi
