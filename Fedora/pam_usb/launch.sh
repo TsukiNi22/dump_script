@@ -1,52 +1,62 @@
-echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-dnf install gum gcc make vim git python3 -y
-echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
-echo -e "[${GREEN}OK${RESET}] Download Package"
+#!/bin/bash
+# Usage: sudo bash pam_usb/launch.sh [<vendor-id> <device-id>]
+# Build pam_usb and require the usb in the system-auth / password-auth stacks (deactivate it without usb)
+set -euo pipefail
 
-DEVICE_INFO=$(lsusb | grep "$1:$2")
-if [ ! -s "$1" ] && [ ! -z "$2" ] && [ ! -z "$DEVICE_INFO" ]; then
-    CHOICE=$(gum choose "Activate" "Desactivate")
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../utils.sh"
+
+VENDOR_ID="${1:-}"
+DEVICE_ID="${2:-}"
+PAM_USB_REPO="https://github.com/mcdope/pam_usb.git"
+PAM_USB_MODULE="/usr/lib64/security/pam_usb.so"
+
+install_packages gum gcc make git python3 pkgconf-pkg-config pam-devel libxml2-devel glib2-devel \
+    udisks-devel libudisks2-devel libevdev-devel || exit 1
+
+# Put back the auth stacks without pam_usb
+deactivate() {
+    install_root_file 644 "$SCRIPT_DIR/disabled_system-auth" /etc/pam.d/system-auth
+    ok "Deactivation of system-auth"
+    install_root_file 644 "$SCRIPT_DIR/disabled_password-auth" /etc/pam.d/password-auth
+    ok "Deactivation of password-auth"
+}
+
+CHOICE="Deactivate"
+if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
+    CHOICE=$(gum choose "Activate" "Deactivate") || CHOICE="Cancel"
 fi
-if [ -z "$1" ] || [ -z "$2" ] || [ -z "$DEVICE_INFO" ] || [ "$CHOICE" = "Desactivate" ]; then
-    command cp pam_usb/disabled_system-auth /etc/pam.d/system-auth
-    echo -e "[${GREEN}OK${RESET}] Desactivation of system-auth"
-    command cp pam_usb/disabled_password-auth /etc/pam.d/password-auth
-    echo -e "[${GREEN}OK${RESET}] Desactivation of password-auth"
-    exit 0
-fi
+case "$CHOICE" in
+    "Activate") ;;
+    "Deactivate") deactivate; exit 0 ;;
+    *) skipped "Pam usb"; exit 0 ;;
+esac
 
-echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PAM-USB${RESET}] 🔻 ════╗"
-command cd pam_usb/
-command rm -rf pam_usb/
-command git clone https://github.com/mcdope/pam_usb.git
-command make -C pam_usb/ > /dev/null
-command make -C pam_usb/ install > /dev/null
-command rm -rf pam_usb/
-command cd ..
-echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PAM-USB${RESET}] 🔺 ════╝"
-echo -e "[${GREEN}OK${RESET}] Download Pam Usb"
+# =========================
+# Build
+# =========================
+build_dir=$(mktemp -d)
+trap 'rm -rf "$build_dir"' EXIT
+box_open "DOWNLOAD-PAM-USB"
+build_status=0
+git clone --depth 1 "$PAM_USB_REPO" "$build_dir" \
+    && make -C "$build_dir" > /dev/null \
+    && make -C "$build_dir" install > /dev/null \
+    || build_status=1
+box_close "DOWNLOAD-PAM-USB"
 
-#OUTPUT=$(command pamusb-conf --add-device Usb)
-if echo "$OUTPUT" | grep -q "No devices detected"; then
-    echo -e "[${RED}INFO${RESET}] $OUTPUT"
-    echo -e "[${RED}FAILED${RESET}] The command 'pamusb-conf --add-device Usb' failed."
+# A missing module in the auth stack would block every login !!!
+if [[ "$build_status" -ne 0 || ! -f "$PAM_USB_MODULE" ]]; then
+    failed "Build of pam usb ($PAM_USB_MODULE not installed)"
     exit 1
 fi
-if [ $? -ne 0 ]; then
-    echo -e "[${RED}FAILED${RESET}] The command 'pamusb-conf --add-device Usb' failed."
-fi
+ok "Download pam usb"
 
-#OUTPUT=$(command pamusb-conf --add-user "$(whoami)")
-if [ $? -ne 0 ]; then
-    echo -e "[${RED}INFO${RESET}] $OUTPUT"
-    echo -e "[${RED}FAILED${RESET}] Of the command 'pamusb-conf --add-user $(whoami)'"
+# =========================
+# Config
+# =========================
+if ! bash "$SCRIPT_DIR/set-file.sh" "$VENDOR_ID" "$DEVICE_ID"; then
+    failed "Setup of pam usb system file"
     exit 1
 fi
-echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb"
-
-command sh pam_usb/set-file.sh $1 $2
-if [ $? -eq 1 ]; then
-    echo -e "[${RED}FAILED${RESET}] Setup Of Pam Usb System File"
-    exit 1
-fi
-echo -e "[${GREEN}OK${RESET}] Setup Of Pam Usb System File"
+ok "Setup of pam usb system file"
