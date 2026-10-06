@@ -9,6 +9,7 @@
 #   --entries               print the menu entries
 #   --header                print the header (keys + running / last setup)
 #   --prompt                print the prompt (menu or running)
+#   --input                 print the fzf actions of the input line (hidden while a task runs)
 #   --preview <n>           details of the entry n + its last / running output
 #   --action <n> <f> <q>    enter: run the entry n, or validate a question (<f> = selected items, <q> = query)
 #   --escape                esc: cancel a question, or quit
@@ -452,6 +453,7 @@ preview_entry() {
 
 # Actions putting the list back (menu, or the locked running line) after a question / a task change
 MENU_ACTIONS="reload-sync(bash $SELF_Q --entries)+transform-prompt(bash $SELF_Q --prompt)+transform-header(bash $SELF_Q --header)"
+MENU_ACTIONS+="+transform(bash $SELF_Q --input)"
 MENU_ACTIONS+="+clear-query+deselect-all+refresh-preview"
 
 # Enter: validate the question, or run the entry
@@ -554,6 +556,8 @@ loading_screen() {
 
     columns=$(tput cols)
     lines=$(tput lines)
+    # The keys typed during the loading aren't shown (restored at the end, or by cleanup on any exit)
+    stty -echo -icanon < /dev/tty 2> /dev/null || true
     width=$((columns - 4 < LOADING_LOG_WIDTH ? columns - 4 : LOADING_LOG_WIDTH))
     margin=$(printf '%*s' $(((columns - width) / 2)) "")
     clear
@@ -571,11 +575,16 @@ loading_screen() {
     tput cup "$top" 0
 
     # The menu needs fzf (+ curl for its API): installed with the update
-    (
-        export DUMP_LOG="$log"
-        task_update 2>&1
-    ) < /dev/null | tee "$log" | RENDER_WIDTH="$width" RENDER_MARGIN="$margin" \
-        render_log full || status=1
+    # In the background + wait: a signal (kill...) is handled at once, not after the end of the update
+    {
+        (
+            export DUMP_LOG="$log"
+            task_update 2>&1
+            echo "$?" > "$DUMP_STATE_DIR/update_status"
+        ) < /dev/null | tee "$log" | RENDER_WIDTH="$width" RENDER_MARGIN="$margin" render_log full
+    } &
+    wait "$!" || true
+    status=$(cat "$DUMP_STATE_DIR/update_status" 2> /dev/null || echo 1)
     if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
         echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
         press_any_key "$margin" "${RED}${BOLD}✘${RESET} Update failed ${GREY}(details in System Update)${RESET}"
@@ -584,8 +593,7 @@ loading_screen() {
         press_any_key "$margin" "${GREEN}✔${RESET} Ready"
     fi
     echo "System_Update" > "$DUMP_STATE_DIR/last"
-    printf '\033[r'
-    tput cnorm
+    restore_terminal
     if ! command -v fzf > /dev/null; then
         failed "fzf is missing: the menu can't be opened"
         exit 1
@@ -600,6 +608,10 @@ case "${1:-}" in
     --header) menu_header; exit 0 ;;
     --prompt)
         if [[ -n "$(running_task)" ]]; then echo "Running ❯ "; else echo "Setup ❯ "; fi
+        exit 0 ;;
+    --input)
+        # No typing while the list is locked (a question shows it again, see utils.sh menu_ask)
+        if [[ -n "$(running_task)" ]]; then echo "hide-input+disable-search"; else echo "show-input+enable-search"; fi
         exit 0 ;;
     --preview) preview_entry "$(entry_at "$2")"; exit 0 ;;
     --action) action_enter "$2" "$3" "${4:-}"; exit 0 ;;
@@ -619,17 +631,49 @@ esac
 # =========================
 DUMP_STATE_DIR=$(mktemp -d)
 export DUMP_STATE_DIR
-# ctrl-c (forced quit): stop the running task (own process group from setsid) before removing the state
+# Put the terminal back as it was: scroll region, cursor, echo / line mode, colors
+# (restore_terminal full: also leave the alternate screen of a killed fzf)
+restore_terminal() {
+    if [[ "${1:-}" == "full" ]]; then
+        tput rmcup > /dev/tty 2> /dev/null || true
+    fi
+    printf '\033[r\033[0m' > /dev/tty 2> /dev/null || true
+    tput cnorm > /dev/tty 2> /dev/null || true
+    stty sane < /dev/tty 2> /dev/null || true
+}
+
+# Kill a process and all its descendants (children first)
+kill_tree() {
+    local child
+
+    for child in $(pgrep -P "$1"); do
+        kill_tree "$child"
+    done
+    kill "$1" 2> /dev/null || true
+}
+
+# Any exit (end, error, ctrl-c, kill, terminal closed): stop the running task (own process group from setsid),
+# the loading / fzf still running, remove the state and restore the terminal
 cleanup() {
     local pid
+    local child
 
+    trap - EXIT INT TERM HUP
     if [[ -f "$DUMP_STATE_DIR/running" ]]; then
-        read -r pid _ < "$DUMP_STATE_DIR/running"
+        read -r pid _ < "$DUMP_STATE_DIR/running" || true
         kill -- "-$pid" 2> /dev/null || true
     fi
+    for child in $(pgrep -P "$$"); do
+        kill_tree "$child"
+    done
     rm -rf "$DUMP_STATE_DIR"
+    restore_terminal full
 }
 trap cleanup EXIT
+# A signal goes through exit -> the EXIT trap runs once (130 = ctrl-c, 143 = kill, 129 = hangup)
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 echo "menu" > "$DUMP_STATE_DIR/mode"
 
 loading_screen
@@ -645,6 +689,8 @@ bash "$SELF" --entries | fzf --listen --no-sort --layout=reverse --height=100% -
     --bind "ctrl-l:execute-silent(bash $SELF_Q --toggle-log)+refresh-preview" \
     --color "border:6,label:5:bold,preview-border:6,preview-label:6:bold,header:7,prompt:6,pointer:5,marker:5" \
     --color "hl:5,hl+:5,fg+:15:bold,bg+:236" \
-    > /dev/null || true
+    > /dev/null &
+# fzf reads its keys on /dev/tty: in the background + wait, a signal is handled at once
+wait "$!" || true
 clear
 echo "👋 Exiting..."
