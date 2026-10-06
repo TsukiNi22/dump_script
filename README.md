@@ -61,6 +61,13 @@ sudo make
 
 ### Git
 Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then clone (https, push with ssh) any of:
+
+> [!NOTE]
+> The `~/.ssh/git` key is an `ed25519` key (the strongest type of OpenSSH and GitHub, no post-quantum signature key
+> exists for ssh yet) or an `ed25519-sk` key on a FIDO2 security key, protected by a passphrase (256 KDF rounds).
+> The quantum resistance comes from the key exchange: the github host of `~/.ssh/config` only allows the
+> post-quantum hybrids `mlkem768x25519-sha256` and `sntrup761x25519-sha512`.
+
 | Repository | Folder |
 | ---------- | ------ |
 | `libutils`, `cpp_project_template` | `~/personal_delivery/cpp/` |

@@ -161,6 +161,34 @@ menu_ask() {
     cat "$dir/answer"
 }
 
+# Run an interactive command on the terminal (hidden input: passphrase...): run_on_tty <header> <command...>
+# In the menu fzf runs it (execute) and comes back to the window after it
+run_on_tty() {
+    local header="$1"
+    local dir="$DUMP_STATE_DIR/tty"
+    shift
+
+    if ! in_menu; then
+        "$@"
+        return
+    fi
+    command mkdir -p "$dir"
+    rm -f "$dir/status"
+    {
+        echo "clear"
+        printf 'echo %q\n' "${BOLD}${CYAN}$header${RESET}"
+        echo "echo"
+        printf '%q ' "$@"
+        echo
+        echo "echo \$? > $(printf '%q' "$dir/status")"
+    } > "$dir/run.sh"
+    fzf_post "execute(bash $dir/run.sh)+refresh-preview"
+    while [[ ! -f "$dir/status" ]]; do
+        sleep "$ASK_POLL_DELAY"
+    done
+    return "$(cat "$dir/status")"
+}
+
 # Choose options: ask_choose [--multi] [--selected <a,b>] <header> <option...> (one answer per line)
 # A "Cancel" option is always added (last): choosing it = esc, return 1
 ask_choose() {

@@ -9,6 +9,9 @@ source "$SCRIPT_DIR/../utils.sh"
 SSH_DIR="$USER_HOME/.ssh"
 SSH_KEY="$SSH_DIR/git"
 SSH_CONFIG="$SSH_DIR/config"
+SSH_KDF_ROUNDS=256 # Rounds of the passphrase derivation (slows down the brute force of a stolen key)
+# Post-quantum key exchange only with github (ML-KEM / NTRU Prime hybrids): no classic fallback
+SSH_PQ_KEX="mlkem768x25519-sha256,sntrup761x25519-sha512"
 
 install_packages git gum openssh-clients || exit 1
 
@@ -55,33 +58,52 @@ done
 # =========================
 run_as_user mkdir -p "$SSH_DIR"
 chmod 700 "$SSH_DIR"
+# Ed25519: the strongest key type of OpenSSH & github (no post-quantum signature key exists for ssh yet),
+# protected by a passphrase typed on the terminal (hidden), -sk = on a FIDO2 security key
 if [[ -f "$SSH_KEY" ]]; then
     ok "Ssh key already exists ($SSH_KEY)"
 else
-    # No passphrase (no terminal in the menu): add one with ssh-keygen -p -f ~/.ssh/git
-    run_as_user ssh-keygen -q -t ed25519 -N "" -C "$email" -f "$SSH_KEY" < /dev/null
-    ok "Init ssh key (without passphrase)"
+    key_type=$(ask_choose "Type of the git ssh key:" \
+        "ed25519 (passphrase)" "ed25519-sk (FIDO2 security key plugged)") || key_type=""
+    case "$key_type" in
+        "ed25519 (passphrase)") key_args=(-t ed25519) ;;
+        "ed25519-sk"*) key_args=(-t ed25519-sk -O resident -O verify-required) ;;
+        *) skipped "Ssh key"; key_args=() ;;
+    esac
+    if [[ ${#key_args[@]} -gt 0 ]]; then
+        if run_on_tty "Passphrase of the git ssh key (strongly recommended)" \
+            sudo -u "$SUDO_USER" -H ssh-keygen "${key_args[@]}" -a "$SSH_KDF_ROUNDS" -C "$email" -f "$SSH_KEY"; then
+            ok "Init ssh key ($(ssh-keygen -l -f "$SSH_KEY.pub" | awk '{print $NF}'))"
+        else
+            failed "Init ssh key"
+        fi
+    fi
 fi
 
-# The key has a custom name -> ssh only uses it with this host block
-if ! grep -q "# >>> dump_script github >>>" "$SSH_CONFIG" 2> /dev/null; then
-    run_as_user tee -a "$SSH_CONFIG" > /dev/null <<SSH
-
+# The key has a custom name -> ssh only uses it with this host block (rewritten to keep it up to date)
+if [[ -f "$SSH_CONFIG" ]]; then
+    run_as_user sed -i '/^# >>> dump_script github >>>$/,/^# <<< dump_script github <<<$/d' "$SSH_CONFIG"
+fi
+run_as_user tee -a "$SSH_CONFIG" > /dev/null <<SSH
 # >>> dump_script github >>>
 Host github.com
     HostName github.com
     User git
     IdentityFile $SSH_KEY
     IdentitiesOnly yes
+    AddKeysToAgent yes
+    KexAlgorithms $SSH_PQ_KEX
+    HostKeyAlgorithms ssh-ed25519
 # <<< dump_script github <<<
 SSH
-    chmod 600 "$SSH_CONFIG"
-    ok "Github host added to $SSH_CONFIG"
-fi
+chmod 600 "$SSH_CONFIG"
+ok "Github host in $SSH_CONFIG (post-quantum key exchange)"
 
-box_open "SSH-PUB"
-cat "$SSH_KEY.pub"
-box_close "SSH-PUB"
+if [[ -f "$SSH_KEY.pub" ]]; then
+    box_open "SSH-PUB"
+    cat "$SSH_KEY.pub"
+    box_close "SSH-PUB"
+fi
 info "Add this key on https://github.com/settings/keys"
 
 # =========================
