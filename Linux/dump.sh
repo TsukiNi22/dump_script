@@ -501,7 +501,6 @@ BANNER=(
 )
 BANNER_WIDTH=63
 LOADING_LOG_WIDTH=90  # Max width of the logs under the title
-PRESS_BOX_WIDTH=31    # Width of the "press any key" box
 PRESS_BLINK_DELAY=0.6 # Seconds between two blinks
 
 # Print <text> (display width <width>) centered on <columns>
@@ -509,44 +508,26 @@ center_on() {
     printf '%*s%s\n' $((($1 - $2) / 2)) "" "$3"
 }
 
-# Line of the box: │ <text centered> │ (<width> = display width of the text)
-box_line() {
-    local inner=$((PRESS_BOX_WIDTH - 2))
-    local left=$(((inner - $2) / 2))
-
-    printf '%s│%*s%s%*s│%s' "$CYAN" "$left" "" "${RESET}$1${CYAN}" $((inner - $2 - left)) "" "$RESET"
-}
-
-# Box over the logs (they stay behind), title + "PRESS ANY KEY" blinking like an arcade machine until a key
-# press_any_key <columns> <top of the logs> <lines> <title> <title width>
+# Under the logs (they stay above): title, then "PRESS ANY KEY" blinking like an arcade machine until a key
+# press_any_key <columns> <title> <title width>
 press_any_key() {
     local columns="$1"
-    local row=$((($2 + $3) / 2 - 2))
-    local col=$((($1 - PRESS_BOX_WIDTH) / 2))
-    local title="$4"
-    local title_width="$5"
+    local title="$2"
+    local title_width="$3"
     local visible=true
     local key
 
     # Keys typed during the loading don't count
     while read -rsn 1 -t 0.01 key < /dev/tty; do :; done
-    tput cup "$row" "$col"
-    printf '%s╭%s╮%s' "$CYAN" "$(repeat "─" $((PRESS_BOX_WIDTH - 2)))" "$RESET"
-    tput cup $((row + 1)) "$col"
-    box_line "" 0
-    tput cup $((row + 2)) "$col"
-    box_line "$title" "$title_width"
-    tput cup $((row + 4)) "$col"
-    box_line "" 0
-    tput cup $((row + 5)) "$col"
-    printf '%s╰%s╯%s' "$CYAN" "$(repeat "─" $((PRESS_BOX_WIDTH - 2)))" "$RESET"
+    echo
+    center_on "$columns" "$title_width" "$title"
     while true; do
-        tput cup $((row + 3)) "$col"
+        # Rewritten in place: back to the start of the line, line cleared
+        printf '\r\033[2K'
         if [[ "$visible" == true ]]; then
-            box_line "${MAGENTA}${BOLD}▶ PRESS ANY KEY ◀${RESET}" 17
+            printf '%*s%s' $(((columns - 17) / 2)) "" "${MAGENTA}${BOLD}▶ PRESS ANY KEY ◀${RESET}"
             visible=false
         else
-            box_line "" 0
             visible=true
         fi
         if read -rsn 1 -t "$PRESS_BLINK_DELAY" key < /dev/tty; then
@@ -591,10 +572,10 @@ loading_screen() {
         render_log full || status=1
     if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
         echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$columns" "$top" "$lines" "${RED}${BOLD}✘ UPDATE FAILED${RESET}" 15
+        press_any_key "$columns" "${RED}${BOLD}✘ UPDATE FAILED${RESET}" 15
     else
         echo "OK SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$columns" "$top" "$lines" "${GREEN}${BOLD}✔ READY${RESET}" 7
+        press_any_key "$columns" "${GREEN}${BOLD}✔ READY${RESET}" 7
     fi
     echo "System_Update" > "$DUMP_STATE_DIR/last"
     printf '\033[r'
