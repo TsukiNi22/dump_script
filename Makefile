@@ -1,6 +1,6 @@
 ##
 ## DUMP SCRIPT PROJECT, 2024
-## dump script (Fedora / Ubuntu)
+## dump script (Fedora)
 ## File description:
 ## Makefile to start sh script
 ##
@@ -8,48 +8,25 @@
 .SILENT:
 
 # Color definition
-export RED=\033[31m
-export GREEN=\033[32m
-export YELLOW=\033[33m
-export BLUE=\033[34m
-export MAGENTA=\033[35m
-export CYAN=\033[36m
-export RESET=\033[0m
+MAGENTA = \033[35m
+BLUE = \033[34m
+RED = \033[31m
+RESET = \033[0m
 
-#echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
-#echo -e "[${RED}ERROR${RESET}] An error occurred"
-#echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
-#echo -e "[${BLUE}INFO${RESET}] Starting the process"
-#echo -e "[${MAGENTA}NOTE${RESET}] Please check the logs"
-#echo -e "[${CYAN}UPDATE${RESET}] System is up to date"
-
-OS := $(shell \grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
+OS := $(shell grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
 all: launch
 
-launch: clean
+launch:
 	clear
 	if [ "$(OS)" = "fedora" ]; then \
-		\echo -e "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[${MAGENTA}FEDORA-DUMP${RESET}]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻"; \
-		\echo -e "[${BLUE}INFO${RESET}] Start the dump on fedora..."; \
-		\make --no-print-directory -C Fedora; \
-		\echo -e "🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺[${MAGENTA}FEDORA-DUMP${RESET}]🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺"; \
-	elif [ "$(OS)" = "ubuntu" ]; then \
-		\echo -e "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[${MAGENTA}UBUNTU-DUMP${RESET}]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻"; \
-		\echo -e "[${BLUE}INFO${RESET}] Start the dump on fedora..."; \
-		\make --no-print-directory -C Ubuntu; \
-		\echo -e "🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺[${MAGENTA}UBUNTU-DUMP${RESET}]🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺"; \
+		printf "🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻[$(MAGENTA)FEDORA-DUMP$(RESET)]🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻🔻\n"; \
+		printf "[$(BLUE)INFO$(RESET)] Start the dump on fedora...\n"; \
+		$(MAKE) --no-print-directory -C Fedora || exit 1; \
+		printf "🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺[$(MAGENTA)FEDORA-DUMP$(RESET)]🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺🔺\n"; \
 	else \
-		echo -e "[${RED}ERROR${RESET}] Unsupported OS: $(OS)"; \
+		printf "[$(RED)ERROR$(RESET)] Unsupported OS: $(OS)\n"; \
 		exit 1; \
-	fi		
+	fi
 
-clean:
-	\unset GREEN
-	\unset YELLOW
-	\unset BLUE
-	\unset MAGENTA
-	\unset CYAN
-	\unset RESET
-
-.PHONY: all
+.PHONY: all launch

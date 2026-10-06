@@ -1,196 +1,141 @@
 #!/bin/bash
+# Usage: sudo bash dump.sh
+# Interactive menu running the setups of this folder (each one in <setup>/launch.sh)
+set -euo pipefail
 
-# Verification before any command
-echo -e "═══════════════ [${CYAN}VERIFICATION${RESET}] ═══════════════"
-if [[ $EUID -ne 0 ]]; then
-    echo -e "[${RED}FAILED${RESET}] This script must be run as root (sudo su)"
-    echo -e "═══════════════ [${CYAN}VERIFICATION${RESET}] ═══════════════"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+# =========================
+# Verification
+# =========================
+section "VERIFICATION"
+ok "Script run as root (user: $SUDO_USER)"
+if ! grep -q "^ID=fedora" /etc/os-release; then
+    failed "This script must be run on Fedora"
     exit 1
 fi
-echo -e "[${GREEN}OK${RESET}] Script run as root"
-echo -e "[${YELLOW}WARNING${RESET}] Proceed with caution"
-if ! grep -q "Fedora" /etc/os-release; then
-    echo -e "[${RED}FAILED${RESET}] This script must be run on Fedora"
-    echo -e "═══════════════ [${CYAN}VERIFICATION${RESET}] ═══════════════"
+ok "Script run on Fedora"
+warning "Proceed with caution"
+
+# =========================
+# Update
+# =========================
+section "UPDATE"
+box_open "UPDATE-PACKAGE"
+if ! dnf update -y; then
+    box_close "UPDATE-PACKAGE"
+    failed "Update package"
     exit 1
 fi
-echo -e "[${GREEN}OK${RESET}] Script run on Fedora"
-echo -e "═══════════════ [${CYAN}VERIFICATION${RESET}] ═══════════════"
+box_close "UPDATE-PACKAGE"
+ok "Update package"
 
-# Update of the actual package
-echo -e "══════════════════ [${CYAN}UPDATE${RESET}] ══════════════════"
-echo -e "╔═════ 🔻 [${CYAN}UPDATE-PACKAGE${RESET}] 🔻 ═════╗"
-command dnf update -y
-if [ $? -eq 1 ]; then
-    echo -e "[${RED}FAILED${RESET}] Update Package"
-    echo -e "╚═════ 🔺 [${CYAN}UPDATE-PACKAGE${RESET}] 🔺 ═════╝"
-    echo -e "══════════════════ [${CYAN}UPDATE${RESET}] ══════════════════"
-    exit 1
+section "INITIALISATION"
+install_packages gum usbutils
+
+# =========================
+# Usb selection
+# =========================
+# Ask a usb with gum, print "<vendor-id> <device-id>" (empty when none)
+select_usb() {
+    local header="$1"
+    local choices
+    local selected
+    local vendor_id=""
+    local device_id=""
+
+    choices=$(lsusb | awk '{print $6 " - " substr($0, index($0, $7))}')
+    selected=$(printf '%s\nManual\nNone\n' "$choices" | gum choose --height=15 --header "$header") || true
+    case "$selected" in
+        "Manual")
+            vendor_id=$(gum input --placeholder "Write the usb vendor-id")
+            device_id=$(gum input --placeholder "Write the usb device-id")
+            ;;
+        "None"|"")
+            ;;
+        *)
+            vendor_id=$(echo "$selected" | cut -d' ' -f1 | cut -d: -f1)
+            device_id=$(echo "$selected" | cut -d' ' -f1 | cut -d: -f2)
+            ;;
+    esac
+    echo "$vendor_id $device_id"
+}
+
+# Print the state of the selected usb
+check_usb() {
+    local name="$1"
+    local vendor_id="$2"
+    local device_id="$3"
+
+    if [[ -z "$vendor_id" || -z "$device_id" ]]; then
+        info "The $name usb is not set"
+    elif ! usb_is_plugged "$vendor_id" "$device_id"; then
+        failed "Can't find a usb with the given vendor-id and device-id ($vendor_id:$device_id)"
+    else
+        ok "The $name usb has been found ($vendor_id:$device_id)"
+    fi
+}
+
+section "USB-SETUP"
+read -r vendor_id device_id <<< "$(select_usb "Choose the main usb (optional but recommended):")" || true
+check_usb "main" "${vendor_id:-}" "${device_id:-}"
+read -r cancel_vendor_id cancel_device_id <<< "$(select_usb "Choose the cancel usb (optional):")" || true
+check_usb "cancel" "${cancel_vendor_id:-}" "${cancel_device_id:-}"
+vendor_id="${vendor_id:-}"
+device_id="${device_id:-}"
+cancel_vendor_id="${cancel_vendor_id:-}"
+cancel_device_id="${cancel_device_id:-}"
+
+# =========================
+# Menu
+# =========================
+# Run a setup and stop everything if it failed
+run_setup() {
+    local name="$1"
+    shift
+
+    section "$name"
+    if ! bash "$@"; then
+        failed "$name"
+        exit 1
+    fi
+}
+
+USB_STATE=""
+if ! usb_is_plugged "$vendor_id" "$device_id"; then
+    USB_STATE=" (Deactivation)"
 fi
-echo -e "╚═════ 🔺 [${CYAN}UPDATE-PACKAGE${RESET}] 🔺 ═════╝"
-echo -e "[${GREEN}OK${RESET}] Update Package"
-echo -e "══════════════════ [${CYAN}UPDATE${RESET}] ══════════════════"
-
-echo -e "══════════════ [${CYAN}INITIALISATION${RESET}] ══════════════"
-echo -e "╔════ 🔻 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔻 ════╗"
-command dnf install gum -y
-echo -e "╚════ 🔺 [${CYAN}DOWNLOAD-PACKAGE${RESET}] 🔺 ════╝"
-echo -e "[${GREEN}OK${RESET}] Download Package"
-echo -e "══════════════ [${CYAN}INITIALISATION${RESET}] ══════════════"
-
-
-echo -e "════════════════ [${CYAN}USB-SETUP${RESET}] ═════════════════"
-# get the actual exesting list of usb
-choices=$(lsusb | awk '{print $6 " - " substr($0, index($0,$7))}')
-choices+="\nManual\nNone"
-
-# selection of the usb
-selected=$(echo -e "$choices" | gum choose --height=15 --header "Choices the main usb (optional but recommended):")
-if [[ "$selected" == "Manual" ]]; then
-    vendor_id=$(gum input --placeholder "Write main usb vendor-id")
-    device_id=$(gum input --placeholder "Write main usb device-id")
-elif ! [[ "$selected" == "None" ]]; then
-    id_pair=$(echo "$selected" | cut -d' ' -f1)
-    vendor_id=$(echo "$id_pair" | cut -d: -f1)
-    device_id=$(echo "$id_pair" | cut -d: -f2)
-fi
-
-DEVICE_INFO=$(lsusb | grep "$vendor_id:$device_id")
-if [ ! -z "$vendor_id" ] && [ ! -z "$device_id" ] && [ -z "$DEVICE_INFO" ]; then
-    echo -e "[${RED}FAILED${RESET}] Can't find a usb with the given vendor-id and device-id (${vendor_id}:${device_id})"
-elif [ -z "$vendor_id" ] || [ -z "$device_id" ]; then
-    echo -e "[${BLUE}INFO${RESET}] The main usb is not set"
-else
-    echo -e "[${GREEN}OK${RESET}] Main usb have been found"
-fi
-
-selected=$(echo -e "$choices" | gum choose --height=15 --header "Choices the cancel usb (optional):")
-if [[ "$selected" == "Manual" ]]; then
-    vendor_id=$(gum input --placeholder "Write cancel usb vendor-id")
-    device_id=$(gum input --placeholder "Write cancel usb device-id")
-elif ! [[ "$selected" == "None" ]]; then
-    id_pair=$(echo "$selected" | cut -d' ' -f1)
-    cancel_vendor_id=$(echo "$id_pair" | cut -d: -f1)
-    cancel_device_id=$(echo "$id_pair" | cut -d: -f2)
-fi
-
-CANCEL_DEVICE_INFO=$(lsusb | grep "$cancel_vendor_id:$cancel_device_id")
-if [ ! -z "$cancel_vendor_id" ] && [ ! -z "$cancel_device_id" ] && [ -z "$CANCEL_DEVICE_INFO" ]; then
-    echo -e "[${RED}FAILED${RESET}] Can't find a usb with the given vendor-id and device-id (${cancel_vendor_id}:${cancel_device_id})"
-elif [ -z "$cancel_vendor_id" ] || [ -z "$cancel_device_id" ]; then
-    echo -e "[${BLUE}INFO${RESET}] The cancel usb is not set"
-else
-    echo -e "[${GREEN}OK${RESET}] Cancel usb have been found"
-fi
-echo -e "════════════════ [${CYAN}USB-SETUP${RESET}] ═════════════════"
-
-MENU=("Pam Usb"
-    "Usb Lock & Power Shutdown"
-    "Screen Of Intruder"
+MENU=("Pam Usb$USB_STATE"
+    "Usb Lock & Power Shutdown$USB_STATE"
+    "Screen Of Intruder$USB_STATE"
     "Dotfile"
     "Package & App"
     "Git"
     "Grub & Plymouth"
     "Quit")
 
-if [ -z "$vendor_id" ] || [ -z "$device_id" ] || [ -z "$DEVICE_INFO" ]; then
-    MENU=("Pam Usb (Desactivation)"
-        "Usb Lock & Power Shutdown (Desactivation)"
-        "Screen Of Intruder (Desactivation)"
-        "Dotfile"
-        "Package & App"
-        "Git"
-        "Grub & Plymouth"
-        "Quit")
-fi
-
 while true; do
-    CHOICE=$(gum choose --cursor "👉" --header "Setup Menu:" "${MENU[@]}")
+    CHOICE=$(gum choose --cursor "👉" --header "Setup Menu:" "${MENU[@]}") || CHOICE="Quit"
 
     case "$CHOICE" in
-        "Pam Usb"|"Pam Usb (Desactivation)")
-            echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
-            command sh pam_usb/launch.sh $vendor_id $device_id
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Pam Usb"
-                echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
-                exit 1
-            fi
-            echo -e "═════════════════ [${CYAN}PAM-USB${RESET}] ══════════════════"
-            ;;
-
-        "Usb Lock & Power Shutdown"|"Usb Lock & Power Shutdown (Desactivation)")
-            echo -e "═════════ [${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}] ══════════"
-            command sh usb_lock_and_power_shutdown/launch.sh $vendor_id $device_id $cancel_vendor_id $cancel_device_id
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] USB Lock & Shutdown"
-                echo -e "═════════ [${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}] ══════════"
-                exit 1
-            fi
-            echo -e "═════════ [${CYAN}USB_LOCK-POWER_SHUTDOWN${RESET}] ══════════"
-            ;;
-
-        "Screen Of Intruder"|"Screen Of Intruder (Desactivation)")
-            echo -e "═════════ [${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}] ══════════"
-            command sh take_screen_of_intruder/launch.sh $vendor_id $device_id
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Screen of intruder"
-                echo -e "═════════ [${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}] ══════════"
-                exit 1
-            fi
-            echo -e "═════════ [${CYAN}TAKE-SCREEN-OF-INTRUDER${RESET}] ══════════"
-            ;;
-
+        "Pam Usb"*)
+            run_setup "PAM-USB" "$SCRIPT_DIR/pam_usb/launch.sh" "$vendor_id" "$device_id" ;;
+        "Usb Lock & Power Shutdown"*)
+            run_setup "USB_LOCK-POWER_SHUTDOWN" "$SCRIPT_DIR/usb_lock_and_power_shutdown/launch.sh" \
+                "$vendor_id" "$device_id" "$cancel_vendor_id" "$cancel_device_id" ;;
+        "Screen Of Intruder"*)
+            run_setup "TAKE-SCREEN-OF-INTRUDER" "$SCRIPT_DIR/take_screen_of_intruder/launch.sh" "$vendor_id" "$device_id" ;;
         "Dotfile")
-            echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
-            command sh dotfile/launch.sh
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Dotfile"
-                echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
-                exit 1
-            fi
-            echo -e "═════════════════ [${CYAN}DOTFILE${RESET}] ══════════════════"
-            ;;
-
+            run_setup "DOTFILE" "$SCRIPT_DIR/dotfile/launch.sh" ;;
         "Package & App")
-            echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
-            command sh package_app/launch.sh
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Package & App"
-                echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
-                exit 1
-            fi
-            echo -e "═══════════════ [${CYAN}PACKAGE-APP${RESET}] ════════════════"
-            ;;
-
+            run_setup "PACKAGE-APP" "$SCRIPT_DIR/package_app/launch.sh" ;;
         "Git")
-            echo -e "═══════════════════ [${CYAN}GIT${RESET}] ════════════════════"
-            command sh git/launch.sh
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Git"
-                echo -e "═══════════════════ [${CYAN}GIT${RESET}] ════════════════════"
-                exit 1
-            fi
-            echo -e "═══════════════════ [${CYAN}GIT${RESET}] ════════════════════"
-            ;;
-
+            run_setup "GIT" "$SCRIPT_DIR/git/launch.sh" ;;
         "Grub & Plymouth")
-            echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
-            command sh grub_plymouth/launch.sh
-            if [ $? -eq 1 ]; then
-                echo -e "[${RED}FAILED${RESET}] Grub & Plymouth"
-                echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
-                exit 1
-            fi
-            echo -e "════════════════ [${CYAN}GRUB-PLYMOUTH${RESET}] ═════════════════"
-            ;;
-            
-        "Quit")
-            echo -e "👋 Exiting..."
-            break
-            ;;
+            run_setup "GRUB-PLYMOUTH" "$SCRIPT_DIR/grub_plymouth/launch.sh" ;;
         *)
-            echo -e "👋 Exiting..."
+            echo "👋 Exiting..."
             break
             ;;
     esac
