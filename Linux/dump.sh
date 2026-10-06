@@ -330,16 +330,31 @@ render_log() {
             print margin text
             fflush()
         }
+        # The └ of a closed block waits for the next line: a result goes on it (└ ✔ ...)
+        function close_box() {
+            if (closing)
+                line(grey "  └" reset)
+            closing = 0
+        }
+        function result(symbol, text) {
+            if (closing)
+                line(grey "  └ " reset symbol reset " " cut(text, width - 7))
+            else
+                line("  " symbol reset " " cut(text, width - 5))
+            closing = 0
+        }
         {
             gsub(/\033\[[0-9;?]*[A-Za-z]/, "")
             gsub(/\r/, "")
         }
         /^@@SECTION@@ / {
+            close_box()
             line("")
             line(cyan bold substr($0, 13) reset)
             next
         }
         /^@@BOX@@ / {
+            close_box()
             box = substr($0, 9)
             count = 0
             if (mode == "full")
@@ -348,7 +363,7 @@ render_log() {
         }
         /^@@BOXEND@@ / {
             if (mode == "full")
-                line(grey "  └" reset)
+                closing = 1
             else
                 line(grey "  ▸ " box " (" count " lines, ctrl-l)" reset)
             box = ""
@@ -360,13 +375,17 @@ render_log() {
                 line(grey "  │ " reset cut($0, width - 5))
             next
         }
-        /^\[  OK  \] / { line("  " green "✔" reset " " cut(substr($0, 10), width - 5)); next }
-        /^\[FAILED\] / { line("  " red bold "✘" reset " " cut(substr($0, 10), width - 5)); next }
-        /^\[ SKIP \] / { line("  " yellow "–" reset " " cut(substr($0, 10), width - 5)); next }
-        /^\[ WARN \] / { line("  " yellow "⚠" reset " " cut(substr($0, 10), width - 5)); next }
-        /^\[ INFO \] / { line("  " blue "•" reset " " cut(substr($0, 10), width - 5)); next }
+        /^\[  OK  \] / { result(green "✔", substr($0, 10)); next }
+        /^\[FAILED\] / { result(red bold "✘", substr($0, 10)); next }
+        /^\[ SKIP \] / { result(yellow "–", substr($0, 10)); next }
+        /^\[ WARN \] / { result(yellow "⚠", substr($0, 10)); next }
+        /^\[ INFO \] / { result(blue "•", substr($0, 10)); next }
         /^$/ { next }
-        { line("  " cut($0, width - 3)) }
+        {
+            close_box()
+            line("  " cut($0, width - 3))
+        }
+        END { close_box() }
     '
 }
 
