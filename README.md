@@ -22,10 +22,10 @@ sudo make
 > Once the dotfiles are installed, the `dump` alias of the zshrc runs `sudo make` in this repository (path written by the Dotfile setup, wherever it was cloned).
 
 > [!NOTE]
-> Everything runs in one `fzf` window: the system update and the usb keys start when it opens, a setup runs in the
-> background with its output shown live on the right (details, status and output of its last run, `ctrl-l`: whole
-> output), and its questions are asked in the list of the window. Every setup can also be run alone (`gum`
-> prompts): `sudo bash Fedora/<setup>/launch.sh`.
+> A loading screen runs the system update (fixed title, logs below), then everything runs in one `fzf` window: a
+> setup runs in the background with its output shown live on the right (details, status and output of its last
+> run, `ctrl-l`: whole output), and its questions are asked in the list of the window. Every setup can also be run
+> alone (`gum` prompts): `sudo bash Fedora/<setup>/launch.sh`.
 
 ## Content of Dotfile, Package & App, Custom Package & AI
 
@@ -92,5 +92,6 @@ For the `USB Disk 2.0` the `vendor-id` is `ffff` and the `device-id` is `5678`.
 | cancel (`cancel-vendor-id` / `cancel-device-id`, optional) | Usb Lock & Power Shutdown: plugged -> the lock & shutdown are cancelled |
 
 > [!NOTE]
-> Without a plugged main usb, the 3 usb setups are shown with `(Deactivation)` and remove what they installed
+> The usb keys are optional (`Usb Keys` in the menu). Without a plugged main usb, the 3 usb setups are marked
+> `(usb key needed)` and propose to choose it when they start, or to only deactivate what they installed
 > (Usb Lock & Power Shutdown: one of them or both).

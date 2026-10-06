@@ -2,8 +2,9 @@
 # Usage: sudo bash dump.sh
 # Interactive menu running the setups of this folder (each one in <setup>/launch.sh)
 #
-# Everything happens in one fzf window: a setup runs in the background, its output is shown live on the right
-# and its questions are asked in the list of the window (utils.sh ask_* -> fzf --listen API).
+# A loading screen (fixed title, logs below) runs the system update, then everything happens in one fzf window:
+# a setup runs in the background, its output is shown live on the right and its questions are asked in the list
+# of the window (utils.sh ask_* -> fzf --listen API).
 # Internal modes called by fzf (state shared in $DUMP_STATE_DIR):
 #   --entries               print the menu entries
 #   --header                print the header (keys + running / last setup)
@@ -12,7 +13,7 @@
 #   --action <n> <f> <q>    enter: run the entry n, or validate a question (<f> = selected items, <q> = query)
 #   --escape                esc: cancel a question, or quit
 #   --toggle-log            ctrl-l: switch the preview between the end and the whole output
-#   --task <n|startup>      run a task (background)
+#   --task <n>              run a task (background)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -132,14 +133,36 @@ task_usb_keys() {
     select_usbs
 }
 
-task_startup() {
-    task_update
-    task_usb_keys
-}
-
 # Run a setup script: task_setup <script> [arg...]
 task_setup() {
     bash "$@"
+}
+
+# Run a setup needing the main usb key: without it, propose to choose it now (or only deactivate)
+task_usb_setup() {
+    local script="$1"
+    local choice
+
+    load_usbs
+    if ! usb_is_plugged "$vendor_id" "$device_id"; then
+        choice=$(ask_choose "$TASK_NAME needs the main usb key:" \
+            "Choose the usb key now" "Deactivation only" "Cancel") || choice="Cancel"
+        case "$choice" in
+            "Choose the usb key now")
+                task_usb_keys
+                load_usbs
+                section "$TASK_NAME"
+                ;;
+            "Deactivation only")
+                info "No usb key: deactivation only"
+                ;;
+            *)
+                skipped "$TASK_NAME (no usb key)"
+                return 0
+                ;;
+        esac
+    fi
+    bash "$script" "$vendor_id" "$device_id" "$cancel_vendor_id" "$cancel_device_id"
 }
 
 # =========================
@@ -156,13 +179,18 @@ menu_entries() {
         echo "${YELLOW}${BOLD}Running: ${task[2]}${RESET} ${GREY}(output on the right)${RESET}"
         return 0
     fi
+    local usb_keys="${GREY}(optional, not set)${RESET}"
+
     load_usbs
     if ! usb_is_plugged "$vendor_id" "$device_id"; then
-        usb_state=" (Deactivation)"
+        usb_state=" ${YELLOW}(usb key needed)${RESET}"
+    fi
+    if [[ -n "$vendor_id" ]]; then
+        usb_keys="${GREY}(main: $vendor_id:$device_id, cancel: ${cancel_vendor_id:-none}:${cancel_device_id:-none})${RESET}"
     fi
     printf '%s\n' \
         "System Update" \
-        "Usb Keys (main: ${vendor_id:-none}:${device_id:-none}, cancel: ${cancel_vendor_id:-none}:${cancel_device_id:-none})" \
+        "Usb Keys $usb_keys" \
         "Pam Usb$usb_state" \
         "Usb Lock & Power Shutdown$usb_state" \
         "Screen Of Intruder$usb_state" \
@@ -180,9 +208,12 @@ entry_at() {
     menu_entries | sed -n "$(($1 + 1))p"
 }
 
-# Name of the log / status files of an entry ("Pam Usb (Deactivation)" -> Pam_Usb)
+# Name of the log / status files of an entry ("Pam Usb (usb key needed)" -> Pam_Usb)
 entry_key() {
-    local name="${1%% (*}"
+    local name
+
+    name=$(sed 's/\x1b\[[0-9;]*m//g' <<< "$1")
+    name="${name%% (*}"
 
     echo "${name//[^A-Za-z0-9]/_}"
 }
@@ -191,16 +222,13 @@ entry_key() {
 entry_task() {
     load_usbs
     case "$1" in
-        "startup") TASK_NAME="STARTUP"; TASK_CMD=(task_startup) ;;
         "System Update") TASK_NAME="SYSTEM-UPDATE"; TASK_CMD=(task_update) ;;
         "Usb Keys"*) TASK_NAME="USB-KEYS"; TASK_CMD=(task_usb_keys) ;;
-        "Pam Usb"*) TASK_NAME="PAM-USB"
-            TASK_CMD=(task_setup "$SCRIPT_DIR/pam_usb/launch.sh" "$vendor_id" "$device_id") ;;
+        "Pam Usb"*) TASK_NAME="PAM-USB"; TASK_CMD=(task_usb_setup "$SCRIPT_DIR/pam_usb/launch.sh") ;;
         "Usb Lock & Power Shutdown"*) TASK_NAME="USB_LOCK-POWER_SHUTDOWN"
-            TASK_CMD=(task_setup "$SCRIPT_DIR/usb_lock_and_power_shutdown/launch.sh" "$vendor_id" "$device_id" \
-                "$cancel_vendor_id" "$cancel_device_id") ;;
+            TASK_CMD=(task_usb_setup "$SCRIPT_DIR/usb_lock_and_power_shutdown/launch.sh") ;;
         "Screen Of Intruder"*) TASK_NAME="TAKE-SCREEN-OF-INTRUDER"
-            TASK_CMD=(task_setup "$SCRIPT_DIR/take_screen_of_intruder/launch.sh" "$vendor_id" "$device_id") ;;
+            TASK_CMD=(task_usb_setup "$SCRIPT_DIR/take_screen_of_intruder/launch.sh") ;;
         "Dotfile") TASK_NAME="DOTFILE"; TASK_CMD=(task_setup "$SCRIPT_DIR/dotfile/launch.sh") ;;
         "Package & App") TASK_NAME="PACKAGE-APP"; TASK_CMD=(task_setup "$SCRIPT_DIR/package_app/launch.sh") ;;
         "Custom Package & Binary") TASK_NAME="CUSTOM-PACKAGE"; TASK_CMD=(task_setup "$SCRIPT_DIR/custom_package/launch.sh") ;;
@@ -219,9 +247,6 @@ run_task() {
 
     entry_task "$entry" || return 0
     key=$(entry_key "$entry")
-    if [[ "$entry" == "startup" ]]; then
-        key="System_Update"
-    fi
     export DUMP_LOG="$DUMP_STATE_DIR/$key.log"
     echo "$$ $key $TASK_NAME" > "$RUNNING_FILE"
     fzf_post "$MENU_ACTIONS"
@@ -277,14 +302,14 @@ menu_header() {
 # @@SECTION@@ -> cyan sub-title, @@BOX@@ (command output) -> grey block, [ OK ]... tags -> colored bullets,
 # long lines cut with … (no wrap). render_log full|summary (summary: the blocks folded on one line)
 render_log() {
-    LC_ALL=C.UTF-8 gawk -v width="${FZF_PREVIEW_COLUMNS:-80}" -v mode="$1" \
+    LC_ALL=C.UTF-8 gawk -v width="${RENDER_WIDTH:-${FZF_PREVIEW_COLUMNS:-80}}" -v margin="${RENDER_MARGIN:-}" -v mode="$1" \
         -v cyan="$CYAN" -v grey="$GREY" -v green="$GREEN" -v red="$RED" -v yellow="$YELLOW" -v blue="$BLUE" \
         -v bold="$BOLD" -v reset="$RESET" '
         function cut(text, room) {
             return length(text) > room ? substr(text, 1, room - 1) "…" : text
         }
         function line(text) {
-            print text
+            print margin text
             fflush()
         }
         {
@@ -446,6 +471,77 @@ action_escape() {
 }
 
 # =========================
+# Loading screen
+# =========================
+BANNER=(
+    "██╗  ██╗ █████╗ ██████╗ ████████╗ █████╗ ███╗   ██╗██╗ █████╗ "
+    "╚██╗██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗████╗  ██║██║██╔══██╗"
+    " ╚███╔╝ ███████║██████╔╝   ██║   ███████║██╔██╗ ██║██║███████║"
+    " ██╔██╗ ██╔══██║██╔══██╗   ██║   ██╔══██║██║╚██╗██║██║██╔══██║"
+    "██╔╝ ██╗██║  ██║██║  ██║   ██║   ██║  ██║██║ ╚████║██║██║  ██║"
+    "╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝"
+)
+BANNER_WIDTH=63
+LOADING_LOG_WIDTH=90 # Max width of the logs under the title
+
+# Print <text> (display width <width>) centered on <columns>
+center_on() {
+    printf '%*s%s\n' $((($1 - $2) / 2)) "" "$3"
+}
+
+# Fixed centered title at the top, the update logs scroll below it (terminal scroll region)
+loading_screen() {
+    local columns
+    local lines
+    local top
+    local width
+    local log="$DUMP_STATE_DIR/System_Update.log"
+    local status=0
+    local line
+
+    columns=$(tput cols)
+    lines=$(tput lines)
+    width=$((columns - 4 < LOADING_LOG_WIDTH ? columns - 4 : LOADING_LOG_WIDTH))
+    clear
+    tput civis
+    echo
+    for line in "${BANNER[@]}"; do
+        center_on "$columns" "$BANNER_WIDTH" "${MAGENTA}${BOLD}$line${RESET}"
+    done
+    center_on "$columns" 31 "${GREY}Fedora dump script - by Tsukini${RESET}"
+    echo
+    center_on "$columns" "$width" "${GREY}$(repeat "─" "$width")${RESET}"
+    top=$((${#BANNER[@]} + 5))
+    printf '\033[%d;%dr' "$((top + 1))" "$lines"
+    tput cup "$top" 0
+
+    # The menu needs fzf (+ curl for its API): installed with the update
+    (
+        export DUMP_LOG="$log"
+        task_update 2>&1
+    ) < /dev/null | tee "$log" | RENDER_WIDTH="$width" RENDER_MARGIN="$(printf '%*s' $(((columns - width) / 2)) "")" \
+        render_log full || status=1
+    if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
+        echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
+        echo
+        center_on "$columns" 44 "${RED}${BOLD}✘ Update failed${RESET} ${GREY}- press a key to continue${RESET}"
+        read -rsn 1 < /dev/tty || true
+    else
+        echo "OK SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
+        echo
+        center_on "$columns" 7 "${GREEN}${BOLD}✔ Ready${RESET}"
+        sleep 1
+    fi
+    echo "System_Update" > "$DUMP_STATE_DIR/last"
+    printf '\033[r'
+    tput cnorm
+    if ! command -v fzf > /dev/null; then
+        failed "fzf is missing: the menu can't be opened"
+        exit 1
+    fi
+}
+
+# =========================
 # Internal modes (called by fzf)
 # =========================
 case "${1:-}" in
@@ -464,13 +560,7 @@ case "${1:-}" in
             touch "$DUMP_STATE_DIR/full_log"
         fi
         exit 0 ;;
-    --task)
-        if [[ "$2" == "startup" ]]; then
-            run_task "startup"
-        else
-            run_task "$(entry_at "$2")"
-        fi
-        exit 0 ;;
+    --task) run_task "$(entry_at "$2")"; exit 0 ;;
 esac
 
 # =========================
@@ -480,11 +570,6 @@ if ! grep -q "^ID=fedora" /etc/os-release; then
     failed "This script must be run on Fedora"
     exit 1
 fi
-# The window needs fzf (+ curl for its API) before anything else
-if ! command -v fzf > /dev/null || ! command -v curl > /dev/null; then
-    dnf install -y -q fzf curl
-fi
-
 DUMP_STATE_DIR=$(mktemp -d)
 export DUMP_STATE_DIR
 # ctrl-c (forced quit): stop the running task (own process group from setsid) before removing the state
@@ -500,7 +585,7 @@ cleanup() {
 trap cleanup EXIT
 echo "menu" > "$DUMP_STATE_DIR/mode"
 
-# The startup (update + usb keys) runs as soon as the window is open
+loading_screen
 bash "$SELF" --entries | fzf --listen --no-sort --layout=reverse --height=100% --cycle --no-info --multi --ansi \
     --with-shell "bash -c" \
     --border rounded --border-label " 🔻 FEDORA-DUMP 🔻 " --border-label-pos 0:bottom \
@@ -508,7 +593,6 @@ bash "$SELF" --entries | fzf --listen --no-sort --layout=reverse --height=100% -
     --prompt "Setup ❯ " --pointer "👉" --marker "✔" \
     --preview "bash $SELF_Q --preview {n}" \
     --preview-window "right,60%,wrap-word,follow,border-rounded" --preview-wrap-sign "    " --preview-label " Details & output " \
-    --bind "start:execute-silent(setsid bash $SELF_Q --task startup > /dev/null 2>&1 < /dev/null &)" \
     --bind "enter:transform(bash $SELF_Q --action {n} {+f} {q})" \
     --bind "esc:transform(bash $SELF_Q --escape)" \
     --bind "ctrl-l:execute-silent(bash $SELF_Q --toggle-log)+refresh-preview" \

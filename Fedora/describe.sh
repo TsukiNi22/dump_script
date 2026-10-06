@@ -30,12 +30,14 @@ format() {
     case "${1:-}" in
         "System Update")
             title "System Update"
-            echo "Runs by itself when the window opens (followed by the usb keys):"
+            echo "Runs on the loading screen at launch, run it again from here:"
             echo "  - dnf update"
             echo "  - packages of the menu: gum, fzf, usbutils, less, curl"
             ;;
         "Pam Usb"*)
             title "Pam Usb"
+            echo "${YELLOW}Needs the main usb key${RESET} (not set: chosen when the setup starts, or deactivation only)"
+            echo
             echo "Activate (main usb plugged):"
             echo "  - build pam_usb from github.com/mcdope/pam_usb"
             echo "  - write /etc/security/pam_usb.conf (vendor, model, serial, volume uuid of the main usb)"
@@ -48,6 +50,8 @@ format() {
             ;;
         "Usb Lock & Power Shutdown"*)
             title "Usb Lock & Power Shutdown"
+            echo "${YELLOW}Needs the main usb key${RESET} (not set: chosen when the setup starts, or deactivation only)"
+            echo
             echo "Activation (main usb plugged), choose USB Lock, Power Shutdown or both:"
             echo "  - USB Lock: udev rule, main usb removed -> lock the session + suspend"
             echo "  - Power Shutdown: udev rule, charger unplugged -> power off"
@@ -59,6 +63,8 @@ format() {
             ;;
         "Screen Of Intruder"*)
             title "Screen Of Intruder"
+            echo "${YELLOW}Needs the main usb key${RESET} (not set: chosen when the setup starts, or deactivation only)"
+            echo
             echo "Activate (main usb plugged):"
             echo "  - install fswebcam"
             echo "  - usb-capture.service (runs as the user) checks every second"
@@ -70,10 +76,10 @@ format() {
             ;;
         "Usb Keys"*)
             title "Usb Keys"
-            echo "Choose the usb used by the 3 usb setups (from lsusb or written by hand), asked in this window:"
+            echo "Optional: choose the usb used by the 3 usb setups (from lsusb or written by hand):"
             echo "  - main: Pam Usb, Usb Lock & Power Shutdown, Screen Of Intruder"
             echo "  - cancel (optional): cancels the Usb Lock & Power Shutdown"
-            note "Without a plugged main usb the usb setups can only deactivate"
+            note "Not set: the usb setups propose to choose it when they start (or deactivation only)"
             ;;
         "Dotfile")
             title "Dotfile"
