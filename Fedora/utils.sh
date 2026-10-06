@@ -11,43 +11,90 @@ YELLOW=$'\033[33m'
 BLUE=$'\033[34m'
 MAGENTA=$'\033[35m'
 CYAN=$'\033[36m'
+GREY=$'\033[90m'
+BOLD=$'\033[1m'
 RESET=$'\033[0m'
+
+# Same colors in the gum prompts (ANSI 5 = magenta, 6 = cyan)
+export GUM_CHOOSE_CURSOR="👉 "
+export GUM_CHOOSE_CURSOR_FOREGROUND="5"
+export GUM_CHOOSE_HEADER_FOREGROUND="6"
+export GUM_CHOOSE_SELECTED_FOREGROUND="5"
+export GUM_INPUT_CURSOR_FOREGROUND="5"
+export GUM_INPUT_PROMPT_FOREGROUND="6"
+export GUM_INPUT_PROMPT="❯ "
+export GUM_WRITE_CURSOR_FOREGROUND="5"
+export GUM_WRITE_HEADER_FOREGROUND="6"
+
+# =========================
+# Display
+# =========================
+DISPLAY_WIDTH=60 # Width of the sections & boxes
+
+# Print <count> times <char>
+repeat() {
+    local line=""
+    local i
+
+    for ((i = 0; i < $2; i++)); do
+        line+="$1"
+    done
+    printf '%s' "$line"
+}
+
+# Center a text between <char> on <total> columns: center <char> <total> <text display width> <text>
+center() {
+    local left=$((($2 - $3) / 2))
+    local right=$(($2 - $3 - left))
+
+    echo "$(repeat "$1" "$left")$4$(repeat "$1" "$right")"
+}
 
 # =========================
 # Logs
 # =========================
+# Tags of 8 columns -> the messages are aligned
 ok() {
-    echo "[${GREEN}OK${RESET}] $*"
+    echo "[  ${GREEN}OK${RESET}  ] $*"
 }
 
 failed() {
-    echo "[${RED}FAILED${RESET}] $*" >&2
+    echo "[${RED}${BOLD}FAILED${RESET}] $*" >&2
 }
 
 skipped() {
-    echo "[${YELLOW}SKIPPED${RESET}] $*"
+    echo "[ ${YELLOW}SKIP${RESET} ] $*"
 }
 
 warning() {
-    echo "[${YELLOW}WARNING${RESET}] $*"
+    echo "[ ${YELLOW}WARN${RESET} ] $*"
 }
 
 info() {
-    echo "[${BLUE}INFO${RESET}] $*"
+    echo "[ ${BLUE}INFO${RESET} ] $*"
 }
 
-# Section title of a setup: ═══ [NAME] ═══
+# Section title of a setup: ════ [ NAME ] ════
 section() {
-    echo "═══════════════ [${CYAN}$1${RESET}] ═══════════════"
+    echo
+    center "═" "$DISPLAY_WIDTH" $((${#1} + 6)) " [ ${BOLD}${CYAN}$1${RESET} ] "
 }
 
-# Box around the output of a command: ╔═ 🔻 [NAME] 🔻 ═╗ ... ╚═ 🔺 [NAME] 🔺 ═╝
+# Box around the output of a command: ╔══ 🔻 [ NAME ] 🔻 ══╗ ... ╚══ 🔺 [ NAME ] 🔺 ══╝
+# (an emoji takes 2 columns, the corners are outside of the centered part)
 box_open() {
-    echo "╔════ 🔻 [${CYAN}$1${RESET}] 🔻 ════╗"
+    echo "╔$(center "═" $((DISPLAY_WIDTH - 2)) $((${#1} + 12)) " 🔻 [ ${CYAN}$1${RESET} ] 🔻 ")╗"
 }
 
 box_close() {
-    echo "╚════ 🔺 [${CYAN}$1${RESET}] 🔺 ════╝"
+    echo "╚$(center "═" $((DISPLAY_WIDTH - 2)) $((${#1} + 12)) " 🔺 [ ${CYAN}$1${RESET} ] 🔺 ")╝"
+}
+
+# Wait for the user before going back to a full screen menu
+pause() {
+    echo
+    read -rsn 1 -p "${GREY}Press any key to go back to the menu...${RESET}" < /dev/tty || true
+    echo
 }
 
 # =========================

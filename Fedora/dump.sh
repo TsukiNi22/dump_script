@@ -6,9 +6,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
+# Xartania banner (same as the file headers)
+banner() {
+    echo "${MAGENTA}${BOLD}"
+    echo "    ██╗  ██╗ █████╗ ██████╗ ████████╗ █████╗ ███╗   ██╗██╗ █████╗"
+    echo "    ╚██╗██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗████╗  ██║██║██╔══██╗"
+    echo "     ╚███╔╝ ███████║██████╔╝   ██║   ███████║██╔██╗ ██║██║███████║"
+    echo "     ██╔██╗ ██╔══██║██╔══██╗   ██║   ██╔══██║██║╚██╗██║██║██╔══██║"
+    echo "    ██╔╝ ██╗██║  ██║██║  ██║   ██║   ██║  ██║██║ ╚████║██║██║  ██║"
+    echo "    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝${RESET}"
+    center " " "$DISPLAY_WIDTH" 32 "${GREY}Fedora dump script - by Tsukini${RESET}"
+}
+
 # =========================
 # Verification
 # =========================
+banner
 section "VERIFICATION"
 ok "Script run as root (user: $SUDO_USER)"
 if ! grep -q "^ID=fedora" /etc/os-release; then
@@ -112,10 +125,17 @@ run_setup() {
     local name="$1"
     shift
 
+    clear
+    banner
     section "$name"
-    if ! bash "$@"; then
+    if bash "$@"; then
+        echo
+        ok "${BOLD}$name${RESET} done"
+    else
+        echo
         failed "$name (see the errors above)"
     fi
+    pause
 }
 
 while true; do
@@ -132,9 +152,14 @@ while true; do
         "Grub & Plymouth"
         "Quit")
     # fzf: the preview shows the details of the hovered entry (describe.sh)
-    CHOICE=$(printf '%s\n' "${MENU[@]}" | fzf --no-sort --layout=reverse --height=100% --border \
-        --header "Setup Menu (enter: run, esc: quit)" --pointer "👉" --no-info \
-        --preview "bash $(printf '%q' "$SCRIPT_DIR/describe.sh") {}" --preview-window "right,60%,wrap") \
+    CHOICE=$(printf '%s\n' "${MENU[@]}" | fzf --no-sort --layout=reverse --height=100% --cycle --no-info \
+        --border rounded --border-label " 🔻 FEDORA-DUMP 🔻 " --border-label-pos 0:bottom \
+        --header "enter: run  •  esc: quit  •  type: filter" --header-first \
+        --prompt "Setup ❯ " --pointer "👉" \
+        --preview "bash $(printf '%q' "$SCRIPT_DIR/describe.sh") {}" \
+        --preview-window "right,60%,wrap,border-rounded" --preview-label " Details " \
+        --color "border:6,label:5:bold,preview-border:6,preview-label:6:bold,header:8,prompt:6,pointer:5" \
+        --color "hl:5,hl+:5,fg+:15:bold,bg+:236") \
         || CHOICE="Quit"
 
     case "$CHOICE" in
@@ -146,7 +171,8 @@ while true; do
         "Screen Of Intruder"*)
             run_setup "TAKE-SCREEN-OF-INTRUDER" "$SCRIPT_DIR/take_screen_of_intruder/launch.sh" "$vendor_id" "$device_id" ;;
         "Usb Keys"*)
-            select_usbs ;;
+            select_usbs
+            pause ;;
         "Dotfile")
             run_setup "DOTFILE" "$SCRIPT_DIR/dotfile/launch.sh" ;;
         "Package & App")
