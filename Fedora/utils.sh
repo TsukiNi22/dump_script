@@ -75,7 +75,12 @@ info() {
 }
 
 # Section title of a setup: ════ [ NAME ] ════
+# In the menu (DUMP_LOG set) sections & boxes are markers drawn by the preview at its own width
 section() {
+    if [[ -n "${DUMP_LOG:-}" ]]; then
+        echo "@@SECTION@@ $1"
+        return 0
+    fi
     echo
     center "═" "$DISPLAY_WIDTH" $((${#1} + 6)) " [ ${BOLD}${CYAN}$1${RESET} ] "
 }
@@ -83,10 +88,18 @@ section() {
 # Box around the output of a command: ╔══ 🔻 [ NAME ] 🔻 ══╗ ... ╚══ 🔺 [ NAME ] 🔺 ══╝
 # (an emoji takes 2 columns, the corners are outside of the centered part)
 box_open() {
+    if [[ -n "${DUMP_LOG:-}" ]]; then
+        echo "@@BOX@@ $1"
+        return 0
+    fi
     echo "╔$(center "═" $((DISPLAY_WIDTH - 2)) $((${#1} + 12)) " 🔻 [ ${CYAN}$1${RESET} ] 🔻 ")╗"
 }
 
 box_close() {
+    if [[ -n "${DUMP_LOG:-}" ]]; then
+        echo "@@BOXEND@@ $1"
+        return 0
+    fi
     echo "╚$(center "═" $((DISPLAY_WIDTH - 2)) $((${#1} + 12)) " 🔺 [ ${CYAN}$1${RESET} ] 🔺 ")╝"
 }
 
@@ -124,11 +137,12 @@ menu_ask() {
     fi
     printf '%s' "$query" > "$dir/query"
     echo "$kind" > "$dir/kind"
+    echo "${BOLD}${CYAN}$header${RESET}" > "$dir/header"
     case "$kind" in
-        choose) echo "$header  (enter: validate, esc: cancel)" > "$dir/header" ;;
-        multi) echo "$header  (tab: toggle, enter: validate, esc: cancel)" > "$dir/header" ;;
-        input) echo "$header  (type, enter: validate, esc: cancel)" > "$dir/header" ;;
-        write) echo "$header  (several values separated by spaces, enter: validate)" > "$dir/header" ;;
+        choose) echo "${GREY}enter validate • esc cancel${RESET}" >> "$dir/header" ;;
+        multi) echo "${GREY}tab toggle • enter validate • esc cancel${RESET}" >> "$dir/header" ;;
+        input) echo "${GREY}type • enter validate • esc cancel${RESET}" >> "$dir/header" ;;
+        write) echo "${GREY}values separated by spaces • enter validate${RESET}" >> "$dir/header" ;;
     esac
     echo "answer" > "$DUMP_STATE_DIR/mode"
     fzf_post "reload-sync(cat $dir/options)+transform-header(cat $dir/header)+change-prompt(Answer ❯ )+transform-query(cat $dir/query)+deselect-all+first+refresh-preview"

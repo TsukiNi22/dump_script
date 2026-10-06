@@ -226,7 +226,6 @@ run_task() {
     echo "$$ $key $TASK_NAME" > "$RUNNING_FILE"
     fzf_post "$MENU_ACTIONS"
     {
-        section "$TASK_NAME"
         "${TASK_CMD[@]}" || status=1
         echo
         if [[ "$status" -eq 0 ]]; then
@@ -245,16 +244,16 @@ run_task() {
     fzf_post "$MENU_ACTIONS+first"
 }
 
-# Colored result of a status file
+# Colored result of a status file: "✔ NAME 12:00:00" / "✘ NAME 12:00:00"
 status_line() {
     local result
     local rest
 
     read -r result rest < "$1"
     if [[ "$result" == "OK" ]]; then
-        echo "${GREEN}${BOLD}✔ $rest${RESET}"
+        echo "${GREEN}${BOLD}✔${RESET} $rest"
     else
-        echo "${RED}${BOLD}✘ $rest${RESET}"
+        echo "${RED}${BOLD}✘${RESET} $rest"
     fi
 }
 
@@ -263,7 +262,7 @@ menu_header() {
     local last
 
     read -r -a task <<< "$(running_task)" || true
-    echo "enter: run  •  ctrl-l: whole output  •  esc: quit  •  ctrl-c: force quit  •  type: filter"
+    echo "${GREY}enter run • ctrl-l output • esc quit${RESET}"
     if [[ ${#task[@]} -gt 0 ]]; then
         echo "${YELLOW}${BOLD}⏳ Running: ${task[2]}${RESET}"
     elif [[ -f "$DUMP_STATE_DIR/last" ]]; then
@@ -274,7 +273,78 @@ menu_header() {
     fi
 }
 
-# Output of a task: live while it runs (tail -f until the task ends), whole or end when finished
+# Draw a task output at the width of the preview, in the style of describe.sh:
+# @@SECTION@@ -> cyan sub-title, @@BOX@@ (command output) -> grey block, [ OK ]... tags -> colored bullets,
+# long lines cut with … (no wrap). render_log full|summary (summary: the blocks folded on one line)
+render_log() {
+    LC_ALL=C.UTF-8 gawk -v width="${FZF_PREVIEW_COLUMNS:-80}" -v mode="$1" \
+        -v cyan="$CYAN" -v grey="$GREY" -v green="$GREEN" -v red="$RED" -v yellow="$YELLOW" -v blue="$BLUE" \
+        -v bold="$BOLD" -v reset="$RESET" '
+        function cut(text, room) {
+            return length(text) > room ? substr(text, 1, room - 1) "…" : text
+        }
+        function line(text) {
+            print text
+            fflush()
+        }
+        {
+            gsub(/\033\[[0-9;?]*[A-Za-z]/, "")
+            gsub(/\r/, "")
+        }
+        /^@@SECTION@@ / {
+            line("")
+            line(cyan bold substr($0, 13) reset)
+            next
+        }
+        /^@@BOX@@ / {
+            box = substr($0, 9)
+            count = 0
+            if (mode == "full")
+                line(grey "  ┌ " box reset)
+            next
+        }
+        /^@@BOXEND@@ / {
+            if (mode == "full")
+                line(grey "  └" reset)
+            else
+                line(grey "  ▸ " box " (" count " lines, ctrl-l)" reset)
+            box = ""
+            next
+        }
+        box != "" {
+            count++
+            if (mode == "full" && $0 != "")
+                line(grey "  │ " reset cut($0, width - 5))
+            next
+        }
+        /^\[  OK  \] / { line("  " green "✔" reset " " cut(substr($0, 10), width - 5)); next }
+        /^\[FAILED\] / { line("  " red bold "✘" reset " " cut(substr($0, 10), width - 5)); next }
+        /^\[ SKIP \] / { line("  " yellow "–" reset " " cut(substr($0, 10), width - 5)); next }
+        /^\[ WARN \] / { line("  " yellow "⚠" reset " " cut(substr($0, 10), width - 5)); next }
+        /^\[ INFO \] / { line("  " blue "•" reset " " cut(substr($0, 10), width - 5)); next }
+        /^$/ { next }
+        { line("  " cut($0, width - 3)) }
+    '
+}
+
+# Title of a task in the describe.sh style ("System_Update" -> System Update)
+task_title() {
+    local title="${1//_/ }"
+
+    echo "${BOLD}${MAGENTA}$title${RESET}"
+    echo "${GREY}$(printf '─%.0s' $(seq 1 ${#title}))${RESET}"
+}
+
+# Sub-title of the output: "<label> ─────────"
+output_title() {
+    local plain
+
+    plain=$(sed 's/\x1b\[[0-9;]*m//g' <<< "$1")
+    echo
+    echo "$1 ${GREY}$(printf '─%.0s' $(seq 1 $((${FZF_PREVIEW_COLUMNS:-80} - ${#plain} - 2))))${RESET}"
+}
+
+# Output of a task: live while it runs (until the task ends), folded or whole (ctrl-l) when finished
 show_output() {
     local key="$1"
     local pid="$2"
@@ -282,12 +352,11 @@ show_output() {
 
     [[ -f "$log" ]] || return 0
     if [[ -n "$pid" ]]; then
-        tail -n +1 -f --pid="$pid" "$log"
+        tail -n +1 -f --pid="$pid" "$log" | render_log full
     elif [[ -f "$DUMP_STATE_DIR/full_log" ]]; then
-        cat "$log"
+        render_log full < "$log"
     else
-        tail -n "$LOG_TAIL" "$log"
-        echo "${GREY}(ctrl-l: whole output)${RESET}"
+        render_log summary < "$log"
     fi
 }
 
@@ -299,27 +368,22 @@ preview_entry() {
     read -r -a task <<< "$(running_task)" || true
     # A question is asked: output of the task asking it
     if [[ "$(mode)" == "answer" && ${#task[@]} -gt 0 ]]; then
-        echo "${BOLD}${MAGENTA}${task[2]}${RESET} ${GREY}waits for an answer (list on the left)${RESET}"
-        echo
-        cat "$DUMP_STATE_DIR/${task[1]}.log"
+        task_title "${task[1]}"
+        output_title "${MAGENTA}${BOLD}❯${RESET} ${BOLD}Waiting for your answer${RESET} ${GREY}(list on the left)${RESET}"
+        render_log full < "$DUMP_STATE_DIR/${task[1]}.log"
         return 0
     fi
     # A task runs (list locked): its live output
     if [[ ${#task[@]} -gt 0 ]]; then
-        echo "${BOLD}${MAGENTA}${task[2]}${RESET} ${GREY}is running${RESET}"
-        echo
+        task_title "${task[1]}"
+        output_title "${YELLOW}${BOLD}⏳ Running${RESET}"
         show_output "${task[1]}" "${task[0]}"
         return 0
     fi
     key=$(entry_key "$entry")
     bash "$SCRIPT_DIR/describe.sh" "$entry"
-    if [[ ${#task[@]} -gt 0 && "${task[1]}" == "$key" ]]; then
-        echo
-        echo "${GREY}──────── ${YELLOW}${BOLD}⏳ Running${RESET}${GREY} ────────${RESET}"
-        show_output "$key" "${task[0]}"
-    elif [[ -f "$DUMP_STATE_DIR/$key.status" ]]; then
-        echo
-        echo "${GREY}──────── Last run: ${RESET}$(status_line "$DUMP_STATE_DIR/$key.status")${GREY} ────────${RESET}"
+    if [[ -f "$DUMP_STATE_DIR/$key.status" ]]; then
+        output_title "${BOLD}Last run${RESET} $(status_line "$DUMP_STATE_DIR/$key.status")"
         show_output "$key" ""
     fi
 }
@@ -443,7 +507,7 @@ bash "$SELF" --entries | fzf --listen --no-sort --layout=reverse --height=100% -
     --header "$(bash "$SELF" --header)" --header-first \
     --prompt "Setup ❯ " --pointer "👉" --marker "✔" \
     --preview "bash $SELF_Q --preview {n}" \
-    --preview-window "right,60%,wrap,follow,border-rounded" --preview-label " Details & output " \
+    --preview-window "right,60%,wrap-word,follow,border-rounded" --preview-wrap-sign "    " --preview-label " Details & output " \
     --bind "start:execute-silent(setsid bash $SELF_Q --task startup > /dev/null 2>&1 < /dev/null &)" \
     --bind "enter:transform(bash $SELF_Q --action {n} {+f} {q})" \
     --bind "esc:transform(bash $SELF_Q --escape)" \
