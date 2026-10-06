@@ -11,25 +11,25 @@ export ZSH="$HOME/.oh-my-zsh"
 
 ZSH_THEME="robbyrussell"
 
-export PATH=/home/mat/.cargo/bin:$PATH
+export PATH=$HOME/bin:$HOME/.cargo/bin:/opt/gbdk/bin:$PATH
 
-unalias git
-unalias mkdir
+# Before oh-my-zsh -> its compinit loads them
+fpath=(~/.zsh/completions $fpath)
+
+unalias git 2> /dev/null
+unalias mkdir 2> /dev/null
 
 #plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
-eval "$(zoxide init zsh)"
-alias cd='z'
-
-eval "$(thefuck --alias f)"
+#eval "$(thefuck --alias f)"
 
 #my alias
 alias edit='v ~/.zshrc && upd'
 alias upd='source ~/.zshrc'
 
-alias dump='\sudo make -C ~/personal_delivery/dump_script'
+alias dump='\sudo make -C ~/dump_script'
 
 alias lock='echo bruh!!!; loginctl lock-session;'
 
@@ -58,54 +58,116 @@ alias sl='\ls -a --color'
 
 alias gst='\git status'
 alias gca='\git commit --amend'
+alias gck='\git checkout'
 alias gd='\git diff'
 alias gl='\git log'
 alias ga='\git add'
 alias gm='\git merge'
 alias gcm='\git commit -m'
 alias gp='\git push origin main'
+alias kipe_puchinge='\git push origin main --force'
 alias gpl='\git pull origin main'
+alias gt='\git tag'
 alias gc='\git clone'
 alias gr='\git restore'
 alias grm='\git rm'
 alias gsw='\git switch'
 alias gb='\git branch'
 alias gpb='\git push origin'
+alias gpbt='\git push origin --tags'
 alias gplb='\git pull origin'
 alias grmb='\git push origin --delete'
 alias grmbl='\git branch -D'
+alias grmtl='\git tag -d'
 
-alias gsetup='\git add . && \git commit -m "setup commit" && \git push'
+alias gsetup='\git add --force cmake/; \git add . && \git commit -m "setup commit" && \git push'
 alias gcds='\git add . && \git commit -m "fix: coding-style" && \git push'
 
-alias m='make -j'
-alias mr='make re -j'
-alias mf='make fclean'
-alias ml='make lib -j'
+alias m='make -j $(nproc)'
+alias mr='make re -j $(nproc)'
 alias mc='make clean'
-alias mrc='make -j re && make clean'
-alias md='make d=t -j'
-alias mrd='make re d=t -j'
-alias mfd='make fclean d=t'
-alias mld='make lib d=t -j'
-alias mcd='make d=t -j && make clean'
-alias mrcd='make re d=t -j && make clean'
-alias mo='make d=o -j'
-alias mro='make re d=o -j'
-alias mfo='make fclean d=o'
-alias mlo='make lib d=o -j'
-alias mco='make d=o -j && make clean'
-alias mrco='make re d=o -j && make clean'
+alias mf='make fclean'
+alias md='make d=t -j $(nproc)'
+alias mrd='make re d=t -j $(nproc)'
+alias mo='make d=o -j $(nproc)'
+alias mro='make re d=o -j $(nproc)'
 alias mgr='make get_unregistered_files'
 alias mgk='make get_unknow_files'
-alias c='make clean'
-alias fc='make fclean'
+
+export BUILD_DIR="build"
+alias build='cmake -S . -B $BUILD_DIR'
+alias buildT='cmake -S . -B $BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON'
+alias buildD='cmake -S . -B $BUILD_DIR -DCMAKE_BUILD_TYPE=Debug'
+alias buildA='cmake -S . -B $BUILD_DIR -DCMAKE_BUILD_TYPE=Asan'
+alias buildO='cmake -S . -B $BUILD_DIR -DCMAKE_BUILD_TYPE=Optimized'
+alias cmc='cmake --build $BUILD_DIR --target clean 2> /dev/null'
+alias cmf='cmc; rm -rf $BUILD_DIR'
+alias cmake_no_target='cmake --build $BUILD_DIR --parallel $(nproc)'
+alias cm='build && cmake_no_target'
+alias cmt='buildT && cmake_no_target'
+alias cmd='buildD && cmake_no_target'
+alias cma='buildA && cmake_no_target'
+alias cmo='buildO && cmake_no_target'
+alias cmR='build && cmake --build $BUILD_DIR --target release --parallel $(nproc)'
+alias cmi='build && s cmake --build $BUILD_DIR --target install --parallel $(nproc)'
+alias cmiR='build && s cmake --build $BUILD_DIR --target install_release --parallel $(nproc)'
+alias cmpR='build && cmake --build $BUILD_DIR --target package_release --parallel $(nproc)'
+alias cmr='cmf; cm'
+alias cmrt='cmf; cmt'
+alias cmrd='cmf; cmd'
+alias cmra='cmf; cma'
+alias cmro='cmf; cmo'
+alias cmrR='cmf; cmR'
+alias cmri='cmf; cmi'
+alias cmriR='cmf; cmiR'
+alias cmrpR='cmf; cmpR'
+alias cmgr='build && cmake --build $BUILD_DIR --target get_unregistered_files'
+alias cmdoc='docker run -it --rm \
+    -u root \
+    -v $(pwd):/home/project:Z \
+    $IMAGE bash -c "
+        apt-get update -qq &&
+        apt-get install -y clang cmake make python3 pkg-config &&
+        cd /home/project &&
+        cmake -S . -B build &&
+        cmake --build build --target release --parallel \$(nproc)"
+'
+alias cmepi='docker run -it --rm \
+    -u root \
+    -v $(pwd):/home/project:Z \
+    epitechcontent/epitest-docker:latest bash -c "
+        apt-get update -qq &&
+        apt-get install -y clang cmake make python3 pkg-config &&
+        cd /home/project &&
+        cmake -S . -B build &&
+        cmake --build build --target release --parallel \$(nproc)"
+'
+alias docker-compose-reup='docker-compose down -v && docker-compose up --build'
+
+alias ctb='ctest --test-dir $BUILD_DIR'
 
 alias t='rm -rf build; \mkdir build && cd build && cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release && cmake --build . && cd ..; rm -rf build'
+alias cds='mf; coding-style . . && echo "-------------------------------------------------" && cat coding-style-reports.log && rm -f coding-style-reports.log'
 
 alias vg='valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --errors-for-leak-kinds=all'
 alias vgr='vg 2> vg'
 alias rvg='rm -f vg'
+
+alias rmtmp='find . \( -name "*.sw*" -o -name "#*#" -o -name "*~" \) -delete'
+alias tmp='\vi tmp_vi_file && rm -f tmp_vi_file'
+alias vt='v tmp_file && rm -f tmp_file'
+
+alias findfunc='grep -rnE . --include="*.h" --include="*.hpp" -- -e'
+alias findc='grep -rnE . --include="*.c" -e'
+alias findh='grep -rnE . --include="*.h" -e'
+alias findcpp='grep -rnE . --include="*.cpp" -e'
+alias findhpp='grep -rnE . --include="*.hpp" -e'
+alias finda='grep -rnE . --include="*" -e'
+alias findx='grep -rnE . -e --include='
+alias nbla='find . -type f ! -path "*/.*" -exec wc -l {} +'
+alias nblp='find . -type f -name "*.py" -exec wc -l {} +'
+alias nblc='find . -type f \( -name "*.c" -o -name "*.h" \) -exec wc -l {} +'
+alias nblcpp='find . -type f \( -name "*.cpp" -o -name "*.hpp" \) -exec wc -l {} +'
 
 alias py='python3'
 alias pex='python3 main.py'
@@ -116,18 +178,10 @@ alias rmpc='rm -rf $(find . -name "__pycache__")'
 alias cl="clear && fastfetch && \ls -a --color"
 alias ct="clear && fastfetch && tree"
 alias exi='exit'
-alias sv='\sudo vi'
+alias sv='\sudo nvim'
 alias su='\sudo su'
-alias tmp='\vi tmp_vi_file && rm -f tmp_vi_file'
-alias rmtmp='find . \( -name "*.sw*" -o -name "#*#" -o -name "*~" \) -delete'
-alias findfunc='grep -rnE ~/delivery/template/include/ --include="*.h" -e'
-alias findc='grep -rnE . --include="*.c" -e'
-alias findh='grep -rnE . --include="*.h" -e'
-alias finda='grep -rnE . --include="*" -e'
-alias cds='mf; coding-style . . && echo "-------------------------------------------------" && cat coding-style-reports.log && rm -f coding-style-reports.log'
 alias goto=''
 alias opgoto=''
-alias vt='v tmp_file && rm -f tmp_file'
 alias lum='\sudo vim /sys/class/backlight/intel_backlight/brightness'
 
 alias ssh2john='~/john/run/ssh2john.py'
@@ -142,6 +196,8 @@ alias tm='tmux'
 alias tmnh='tmux split-window -h'
 alias tmnv='tmux split-window -v'
 
+alias doc='docker run -it --rm -v $(pwd):/home/project:Z -w /home/project ubuntu:24.04 bash'
+alias docc='docker run -it --rm -v $(pwd):/home/project:Z -w /home/project $IMAGE bash'
 alias epi='docker run -it --rm -v $(pwd):/home/project:Z -w /home/project epitechcontent/epitest-docker:latest bash'
 alias psdoc='docker ps -a'
 alias stopdoc='docker container prune -f'
@@ -152,8 +208,8 @@ alias dnfi='\sudo dnf install'
 alias dnfr='\sudo dnf remove'
 alias setup_terminal='tmnh && tmux select-pane -L && tmnv && cd include && cl && tmux select-pane -R && tmux select-pane -R  && tmux send-keys "mf && cl && gpl && gst" C-m && tmux select-pane -R && tmux send-keys "cd src && cl && tree" C-m'
 
-alias h='cd ~/delivery/year_1/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. && cd -'
-alias hd='cd ~/delivery/year_1/mul/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. -D && cd -'
+alias h='cd ~/delivery/year_1/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. && cd -'
+alias hd='cd ~/delivery/year_1/B-MUL-100-BDX-1-1-myhunter-mathias.dumoulin/ && ./my_hunter -l 3 -d 2. -D && cd -'
 alias tt="rm -f *.cor ; echo 'COMPILATION:' && m && echo && echo 'FILE:' && cat \$FILE && echo && echo 'OUR:' && ./asm \$FILE && mv *.cor our && hexdump -C our && echo && echo 'OTHER:' && ./binaries/asm/asm \$FILE && mv *.cor real && hexdump -C real && echo && echo 'DIFF:' && cmp -l our real | awk '{printf \"Diff at byte %d\n\", \$1 - 2192}' ; rm -f our real"
 
 alias a='ani-cli'
@@ -161,8 +217,10 @@ alias ulimit_reset='ulimit -s 8192'
 
 alias fastfetch="~/.config/fastfetch/rdm_img.sh"
 alias streamlit="~/.local/bin/streamlit"
+alias linpeas='\curl -L https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas.sh | \sh'
 
 alias e='xeyes'
+alias exegol='\sudo -E $HOME/.local/bin/exegol'
 alias rtfm='zenity --info --title="Just" --width=700 --height=400 --text="<span font='\''75'\'' color='\''red'\''><b>RTFM</b></span>\n\n<span font='\''20'\''>READ THE F***ING MANUAL!!!</span>"'
 alias lost='zenity --info --title="Just" --width=700 --height=400 --text="<span font='\''75'\'' color='\''red'\''><b>DEVINE QUOI</b></span>\n\n<span font='\''20'\''>j'\''ai perdu!</span>"'
 alias tsukini='unalias sudo && unalias vi && unalias vim && unalias nvim && unalias nano && unalias git && unalias sh && unalias curl && unalias mkdir && unalias ls && cl'
@@ -185,98 +243,127 @@ alias tg='echo "_ ._  __. . .._ ._.. ." && play -n synth 0.9 sine 800 >/dev/null
     play -n synth 0.1 sine 800 >/dev/null 2>&1
 '
 
+alias ip_pub='\curl ipinfo.io/ip'
+alias init_ethernet_share=' \
+    \sudo iptables -t nat -A POSTROUTING -o wlo1 -j MASQUERADE; \
+    \sudo iptables -A FORWARD -i $ETHERNET -o wlo1 -j ACCEPT; \
+    \sudo iptables -A FORWARD -i wlo1 -o $ETHERNET -m state --state RELATED,ESTABLISHED -j ACCEPT;
+'
+alias init_ethernet_share3=' \
+    \sudo iptables -t nat -A POSTROUTING -o wlo1 -j MASQUERADE; \
+    \sudo iptables -A FORWARD -i enp3s0 -o wlo1 -j ACCEPT; \
+    \sudo iptables -A FORWARD -i wlo1 -o enp3s0 -m state --state RELATED,ESTABLISHED -j ACCEPT;
+'
+alias init_ethernet_share4=' \
+    \sudo iptables -t nat -A POSTROUTING -o wlo1 -j MASQUERADE; \
+    \sudo iptables -A FORWARD -i enp4s0 -o wlo1 -j ACCEPT; \
+    \sudo iptables -A FORWARD -i wlo1 -o enp4s0 -m state --state RELATED,ESTABLISHED -j ACCEPT;
+'
+
+alias force_ip=' \
+    \sudo ip addr add 192.168.50.1/24 dev $ETHERNET; \
+    \sudo ip link set $ETHERNET up;
+'
+alias force_ip3=' \
+    \sudo ip addr add 192.168.50.1/24 dev enp3s0; \
+    \sudo ip link set enp3s0 up;
+'
+alias force_ip4=' \
+    \sudo ip addr add 192.168.50.1/24 dev enp4s0; \
+    \sudo ip link set enp4s0 up;
+'
+
+ollama-hosted() {
+    local action="-run"
+
+    if [[ "$1" == "-run" || "$1" == "-stop" ]]; then
+        action="$1"
+        shift
+    fi
+
+    local ssh_pid
+    if [[ "$action" == "-stop" ]]; then
+        ssh_pid=$(pgrep -n -f 'ssh -N -f ai-server')
+        if [[ -n "$ssh_pid" ]]; then
+            kill "$ssh_pid"
+            echo "Ollama SSH stopped (PID $ssh_pid)"
+        else
+            echo "No Ollama SSH found"
+        fi
+
+        return 0
+    fi
+
+    ssh -N -f ai-server
+    ssh_pid=$(pgrep -n -f 'ssh -N -f ai-server')
+
+    OLLAMA_HOST=http://127.0.0.1:11435 ollama "$@"
+    local exit_code=$?
+
+    kill "$ssh_pid" 2>/dev/null
+    return $exit_code
+}
+
+# adress ip: 192.168.50.2
+# masque: 255.255.255.0
+# passerelle: 192.168.50.1
+# DNS-1: 1.1.1.1
+# DNS-2: 8.8.4.4
+
 #lost
 
 clear
 fastfetch
 sl
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+# Created by `pipx` on 2026-01-13 13:17:45
+export PATH="$PATH:$HOME/.local/bin"
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
+# NPM global bin (added by Qwen Code installer)
+export PATH="$HOME/.npm-global/bin:$PATH"
 
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+# opencode
+export PATH=$HOME/.opencode/bin:$PATH
 
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
+# js android
+export CAPACITOR_ANDROID_STUDIO_PATH=/usr/local/bin/android-studio-flatpak
 
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
+# >>> context-forge completion >>>
+# Added by context-forge setup.sh (remove this block to disable it)
+# /usr/local: install from the sources (cmake), /usr: install from the packages
+for _cf_dir in /usr/local/share/zsh/site-functions /usr/share/zsh/site-functions; do
+    if [[ -r "$_cf_dir/_context-forge" ]]; then
+        (( ${fpath[(Ie)$_cf_dir]} )) || fpath=("$_cf_dir" $fpath)
+        _cf_found=1
+        break
+    fi
+done
+if (( ${+_cf_found} )); then
+    # compinit already done (oh-my-zsh, ...) -> only register the completion
+    if (( ${+functions[compdef]} )); then
+        autoload -Uz _context-forge && compdef _context-forge context-forge
+    else
+        autoload -Uz compinit && compinit -i
+    fi
+fi
+unset _cf_dir _cf_found
+# <<< context-forge completion <<<
 
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
+# >>> tsukini-skills completion >>>
+# Added by the skills setup.sh (remove this block to disable it): completion of xstyle
+_ts_dir="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions"
+(( ${fpath[(Ie)$_ts_dir]} )) || fpath=("$_ts_dir" $fpath)
+if (( ${+functions[compdef]} )); then
+    # compinit already done (oh-my-zsh, ...) -> only register the completions
+    for _ts_tool in xstyle; do
+        autoload -Uz "_$_ts_tool" && compdef "_$_ts_tool" "$_ts_tool"
+    done
+else
+    autoload -Uz compinit && compinit -i
+fi
+unset _ts_dir _ts_tool
+# <<< tsukini-skills completion <<<
 
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch $(uname -m)"
-
-# Set personal aliases, overriding those provided by Oh My Zsh libs,
-# plugins, and themes. Aliases can be placed here, though Oh My Zsh
-# users are encouraged to define aliases within a top-level file in
-# the $ZSH_CUSTOM folder, with .zsh extension. Examples:
-# - $ZSH_CUSTOM/aliases.zsh
-# - $ZSH_CUSTOM/macos.zsh
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+# Must stay at the end of the file (zoxide doctor)
+eval "$(zoxide init zsh)"
+alias cd='z'

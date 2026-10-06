@@ -25,9 +25,9 @@ require('lazy').setup({
     --require 'themes.deepwhite',
 
     require 'plugins.auto-completion',
-    require 'plugins.neotree',
-    require 'plugins.header',
-
+    --require 'plugins.neotree',
+    --require 'plugins.header',
+    require 'plugins.treesitter',
 })
 
 -- Update the date of xartania header

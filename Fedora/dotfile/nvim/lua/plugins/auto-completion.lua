@@ -78,13 +78,12 @@ return {
     {
         'neovim/nvim-lspconfig', -- Required for LSP
         config = function()
-        local lspconfig = require('lspconfig')
-        local capabilities = require('cmp_nvim_lsp').default_capabilities()
+            local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-        -- Example: Setup for a specific language server
-        lspconfig.lua_ls.setup({
-            capabilities = capabilities,
-        })
+            vim.lsp.config('lua_ls', {
+                capabilities = capabilities,
+            })
+            vim.lsp.enable('lua_ls')
         end,
     },
 }

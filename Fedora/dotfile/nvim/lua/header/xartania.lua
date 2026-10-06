@@ -88,6 +88,35 @@ function InsertHeaderC()
     vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
 end
 
+function InsertHeaderCPP()
+    local date = os.date("%d/%m/%Y")
+    local file = vim.fn.expand("%:t")
+
+    local header = {
+    "/**************************************************************\\",
+    "",
+    " ██╗  ██╗ █████╗ ██████╗ ████████╗ █████╗ ███╗   ██╗██╗ █████╗ ",
+    " ╚██╗██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗████╗  ██║██║██╔══██╗",
+    "  ╚███╔╝ ███████║██████╔╝   ██║   ███████║██╔██╗ ██║██║███████║",
+    "  ██╔██╗ ██╔══██║██╔══██╗   ██║   ██╔══██║██║╚██╗██║██║██╔══██║",
+    " ██╔╝ ██╗██║  ██║██║  ██║   ██║   ██║  ██║██║ ╚████║██║██║  ██║",
+    " ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝",
+    "",
+    "Edition:",
+    "##  @date " .. date .. " by @author " .. user,
+    "",
+    "File Name:",
+    "##  @file " .. file,
+    "",
+    "File Description:",
+    "##  You know, I don t think there are good or bad descriptions,",
+    "##  for me, life is all about functions...",
+    "\\**************************************************************/"
+    }
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
+end
+
 function InsertHeaderMakefile()
     local date = os.date("%d/%m/%Y")
     local file = vim.fn.expand("%:t")
@@ -127,6 +156,8 @@ function InsertHeader()
         InsertHeaderPy()
     elseif ext == "c" or ext == "h" then
         InsertHeaderC()
+    elseif ext == "cpp" or ext == "hpp" then
+        InsertHeaderCPP()
     elseif filename == "Makefile" or filename == "makefile" or ext == "mk" then
         InsertHeaderMakefile()
     else
