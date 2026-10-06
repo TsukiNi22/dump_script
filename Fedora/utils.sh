@@ -131,7 +131,7 @@ menu_ask() {
         write) echo "$header  (several values separated by spaces, enter: validate)" > "$dir/header" ;;
     esac
     echo "answer" > "$DUMP_STATE_DIR/mode"
-    fzf_post "reload-sync(cat $dir/options)+transform-header(cat $dir/header)+change-prompt(❓ ❯ )+transform-query(cat $dir/query)+deselect-all+first+refresh-preview"
+    fzf_post "reload-sync(cat $dir/options)+transform-header(cat $dir/header)+change-prompt(Answer ❯ )+transform-query(cat $dir/query)+deselect-all+first+refresh-preview"
     # Separate request: the list must be reloaded before moving / selecting in it
     if [[ -n "$actions" ]]; then
         sleep "$ASK_POLL_DELAY"
