@@ -501,39 +501,24 @@ BANNER=(
 )
 BANNER_WIDTH=63
 LOADING_LOG_WIDTH=90  # Max width of the logs under the title
-PRESS_BLINK_DELAY=0.6 # Seconds between two blinks
 
 # Print <text> (display width <width>) centered on <columns>
 center_on() {
     printf '%*s%s\n' $((($1 - $2) / 2)) "" "$3"
 }
 
-# End of the logs, aligned on them: result line, then "Press any key to continue..." blinking until a key
+# End of the logs, in their style (bullet line, then a grey "Press any key to continue..."), waits a key
 # press_any_key <margin> <result line>
 press_any_key() {
     local margin="$1"
     local result="$2"
-    local visible=true
     local key
 
     # Keys typed during the loading don't count
     while read -rsn 1 -t 0.01 key < /dev/tty; do :; done
-    echo
-    echo "$margin$result"
-    echo
-    while true; do
-        # Rewritten in place: back to the start of the line, line cleared
-        printf '\r\033[2K'
-        if [[ "$visible" == true ]]; then
-            printf '%s%s' "$margin" "${GREY}Press any key to continue...${RESET}"
-            visible=false
-        else
-            visible=true
-        fi
-        if read -rsn 1 -t "$PRESS_BLINK_DELAY" key < /dev/tty; then
-            break
-        fi
-    done
+    echo "$margin  $result"
+    printf '%s  %s' "$margin" "${GREY}Press any key to continue...${RESET}"
+    read -rsn 1 key < /dev/tty || true
 }
 
 # Fixed centered title at the top, the update logs scroll below it (terminal scroll region)
@@ -574,10 +559,10 @@ loading_screen() {
         render_log full || status=1
     if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
         echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$margin" "${RED}${BOLD}✘${RESET} ${BOLD}Update failed${RESET} ${GREY}(details in System Update)${RESET}"
+        press_any_key "$margin" "${RED}${BOLD}✘${RESET} Update failed ${GREY}(details in System Update)${RESET}"
     else
         echo "OK SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$margin" "${GREEN}${BOLD}✔${RESET} ${BOLD}Ready${RESET}"
+        press_any_key "$margin" "${GREEN}✔${RESET} Ready"
     fi
     echo "System_Update" > "$DUMP_STATE_DIR/last"
     printf '\033[r'
