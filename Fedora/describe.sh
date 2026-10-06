@@ -70,6 +70,7 @@ format() {
             echo "  - usb-capture.service (runs as the user) checks every second"
             echo "  - screen locked AND main usb unplugged -> webcam picture in"
             echo "    ~/Images/Intruder_Picture/intruder_<date>.jpg"
+            echo "  - max number of pictures kept (asked, 0 = unlimited): the oldest ones are deleted"
             echo
             echo "Deactivate:"
             echo "  - stop & remove the service and its scripts"

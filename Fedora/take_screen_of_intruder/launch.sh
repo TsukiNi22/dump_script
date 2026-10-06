@@ -1,5 +1,6 @@
 #!/bin/bash
 # Usage: sudo bash take_screen_of_intruder/launch.sh [<vendor-id> <device-id>]
+# (asks the max number of pictures kept: 0 = unlimited, else the oldest ones are deleted)
 # Take a webcam picture when the screen is locked and the usb is unplugged (deactivate it without usb)
 set -euo pipefail
 
@@ -30,7 +31,25 @@ case "$CHOICE" in
     *) skipped "Screen of intruder"; exit 0 ;;
 esac
 
-if ! bash "$SCRIPT_DIR/set-file.sh" "$VENDOR_ID" "$DEVICE_ID"; then
+# Max number of pictures kept (0 = unlimited)
+while true; do
+    if ! MAX_PICTURES=$(ask_input "Max number of pictures kept (0 = unlimited):" "0"); then
+        skipped "Screen of intruder"
+        exit 0
+    fi
+    MAX_PICTURES="${MAX_PICTURES:-0}"
+    if [[ "$MAX_PICTURES" =~ ^[0-9]+$ ]]; then
+        break
+    fi
+    warning "'$MAX_PICTURES' is not a number"
+done
+if [[ "$MAX_PICTURES" -eq 0 ]]; then
+    info "No limit of pictures"
+else
+    info "Only the $MAX_PICTURES last pictures are kept"
+fi
+
+if ! bash "$SCRIPT_DIR/set-file.sh" "$VENDOR_ID" "$DEVICE_ID" "$MAX_PICTURES"; then
     failed "Setup of take screen of intruder file"
     exit 1
 fi
