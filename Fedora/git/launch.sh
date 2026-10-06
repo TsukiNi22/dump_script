@@ -20,8 +20,8 @@ user_git_config() {
     run_as_user git config --global "$@"
 }
 
-name=$(gum input --placeholder "Write your github username" --value "$(user_git_config user.name || true)")
-email=$(gum input --placeholder "Write your github email" --value "$(user_git_config user.email || true)")
+name=$(ask_input "Github username:" "$(user_git_config user.name || true)") || name=""
+email=$(ask_input "Github email:" "$(user_git_config user.email || true)") || email=""
 if [[ -z "$name" || -z "$email" ]]; then
     failed "The github username and email are required"
     exit 1
@@ -55,8 +55,9 @@ chmod 700 "$SSH_DIR"
 if [[ -f "$SSH_KEY" ]]; then
     ok "Ssh key already exists ($SSH_KEY)"
 else
-    run_as_user ssh-keygen -q -t ed25519 -C "$email" -f "$SSH_KEY"
-    ok "Init ssh key"
+    # No passphrase (no terminal in the menu): add one with ssh-keygen -p -f ~/.ssh/git
+    run_as_user ssh-keygen -q -t ed25519 -N "" -C "$email" -f "$SSH_KEY" < /dev/null
+    ok "Init ssh key (without passphrase)"
 fi
 
 # The key has a custom name -> ssh only uses it with this host block
@@ -105,7 +106,7 @@ clone_repo() {
     fi
 }
 
-CHOICES=$(gum choose --no-limit --header "Repositories to clone:" \
+CHOICES=$(ask_choose --multi "Repositories to clone:" \
     "libutils" "skills" "cpp_project_template" "docker-image" "Other links") || CHOICES=""
 mapfile -t SELECTED <<< "$CHOICES"
 status=0
@@ -119,8 +120,8 @@ for choice in "${SELECTED[@]}"; do
             clone_repo "https://github.com/$GITHUB_USER/docker-image.git" "$USER_HOME/personal_delivery/other/docker-image" \
                 || status=1 ;;
         "Other links")
-            links=$(gum write --height=10 --placeholder "One repository link per line (ctrl+d to validate)") || links=""
-            dest_dir=$(gum input --value "$USER_HOME/personal_delivery" --placeholder "Folder of the clones")
+            links=$(ask_write "Repository links:") || links=""
+            dest_dir=$(ask_input "Folder of the clones:" "$USER_HOME/personal_delivery") || dest_dir=""
             while read -r link; do
                 [[ -z "$link" ]] && continue
                 name=$(basename "$link" .git)

@@ -42,7 +42,7 @@ setup_context() {
 # =========================
 # Program
 # =========================
-CHOICES=$(gum choose --no-limit --selected="Claude Code,Skills" --header "AI setup to run:" \
+CHOICES=$(ask_choose --multi --selected "Claude Code,Skills" "AI setup to run:" \
     "Claude Code" "Ollama" "Skills" "Skills context") || CHOICES=""
 if [[ -z "$CHOICES" ]]; then
     skipped "AI setup"

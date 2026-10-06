@@ -28,6 +28,12 @@ format() {
 
 {
     case "${1:-}" in
+        "System Update")
+            title "System Update"
+            echo "Runs by itself when the window opens (followed by the usb keys):"
+            echo "  - dnf update"
+            echo "  - packages of the menu: gum, fzf, usbutils, less, curl"
+            ;;
         "Pam Usb"*)
             title "Pam Usb"
             echo "Activate (main usb plugged):"
@@ -64,7 +70,7 @@ format() {
             ;;
         "Usb Keys"*)
             title "Usb Keys"
-            echo "Choose again the usb used by the 3 usb setups (from lsusb or written by hand):"
+            echo "Choose the usb used by the 3 usb setups (from lsusb or written by hand), asked in this window:"
             echo "  - main: Pam Usb, Usb Lock & Power Shutdown, Screen Of Intruder"
             echo "  - cancel (optional): cancels the Usb Lock & Power Shutdown"
             note "Without a plugged main usb the usb setups can only deactivate"

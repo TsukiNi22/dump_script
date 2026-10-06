@@ -22,7 +22,7 @@ deactivate() {
 
 CHOICE="Deactivate"
 if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
-    CHOICE=$(gum choose "Activate" "Deactivate") || CHOICE="Cancel"
+    CHOICE=$(ask_choose "Screen of intruder:" "Activate" "Deactivate") || CHOICE="Cancel"
 fi
 case "$CHOICE" in
     "Activate") ;;

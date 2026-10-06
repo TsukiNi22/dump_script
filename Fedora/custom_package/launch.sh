@@ -32,7 +32,7 @@ setup_xstyle() {
 # =========================
 # Program
 # =========================
-CHOICES=$(gum choose --no-limit --selected="libutils,xstyle" --header "Custom package & binary to install:" \
+CHOICES=$(ask_choose --multi --selected "libutils,xstyle" "Custom package & binary to install:" \
     "libutils" "xstyle") || CHOICES=""
 if [[ -z "$CHOICES" ]]; then
     skipped "Custom package & binary"

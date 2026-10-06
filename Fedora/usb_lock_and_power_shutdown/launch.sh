@@ -31,7 +31,7 @@ reload_rules() {
 }
 
 if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
-    CHOICE=$(gum choose \
+    CHOICE=$(ask_choose "Usb lock & power shutdown:" \
         "USB Lock ($(get_status "$USB_RULE"))" \
         "Power Shutdown ($(get_status "$POWER_RULE"))" \
         "Both (Activation)" \
@@ -47,7 +47,7 @@ else
         info "Nothing to deactivate (no main usb to activate them)"
         exit 0
     fi
-    CHOICE=$(gum choose --header "No main usb: deactivation only" "${OPTIONS[@]}" "Cancel") || CHOICE="Cancel"
+    CHOICE=$(ask_choose "No main usb, deactivation only:" "${OPTIONS[@]}" "Cancel") || CHOICE="Cancel"
 fi
 
 # =========================

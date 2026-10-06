@@ -15,7 +15,7 @@ install_packages git gum dracut grub2-tools grub2-common plymouth plymouth-scrip
 # =========================
 # Grub
 # =========================
-repo_url=$(gum input --placeholder "Write the link to a grub theme repository (empty to skip)")
+repo_url=$(ask_input "Link of a grub theme repository (empty to skip):") || repo_url=""
 if [[ -z "$repo_url" ]]; then
     skipped "Grub theme"
 else
@@ -33,7 +33,7 @@ else
         ok "Download grub theme"
         box_open "INSTALLATION-GRUB-THEME"
         install_status=0
-        (cd "$clone_dir" && bash install.sh) || install_status=1
+        (cd "$clone_dir" && bash install.sh < /dev/null) || install_status=1
         box_close "INSTALLATION-GRUB-THEME"
         if [[ "$install_status" -ne 0 ]]; then
             failed "Installation grub theme"

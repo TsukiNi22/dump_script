@@ -58,12 +58,8 @@ ok() {
     echo "[  ${GREEN}OK${RESET}  ] $*"
 }
 
-# On stderr (+ in the log of the menu run: only stdout goes through its tee)
 failed() {
     echo "[${RED}${BOLD}FAILED${RESET}] $*" >&2
-    if [[ -n "${DUMP_LOG:-}" ]]; then
-        echo "[${RED}${BOLD}FAILED${RESET}] $*" >> "$DUMP_LOG"
-    fi
 }
 
 skipped() {
@@ -94,11 +90,117 @@ box_close() {
     echo "╚$(center "═" $((DISPLAY_WIDTH - 2)) $((${#1} + 12)) " 🔺 [ ${CYAN}$1${RESET} ] 🔺 ")╝"
 }
 
-# Wait for the user before going back to a full screen menu
-pause() {
-    echo
-    read -rsn 1 -p "${GREY}Press any key to go back to the menu...${RESET}" < /dev/tty || true
-    echo
+# =========================
+# Questions
+# =========================
+# In the menu (dump.sh): the question is shown in the fzf window (--listen API) and the answer written back
+# by the menu in $DUMP_STATE_DIR/ask. Run alone: gum prompts.
+ASK_POLL_DELAY=0.2 # Seconds between two checks of the answer
+
+in_menu() {
+    [[ -n "${FZF_PORT:-}" && -n "${DUMP_STATE_DIR:-}" ]]
+}
+
+# Send actions to the fzf menu
+fzf_post() {
+    curl -s -XPOST "localhost:$FZF_PORT" -d "$1" > /dev/null
+}
+
+# Show a question in the menu and wait for its answer: menu_ask <kind> <header> <query> <actions> [option...]
+# kind = choose | multi | input | write, prints the answer, return 1 when cancelled
+menu_ask() {
+    local kind="$1"
+    local header="$2"
+    local query="$3"
+    local actions="$4"
+    local dir="$DUMP_STATE_DIR/ask"
+    shift 4
+
+    command mkdir -p "$dir"
+    rm -f "$dir/answer" "$dir/status"
+    : > "$dir/options"
+    if [[ $# -gt 0 ]]; then
+        printf '%s\n' "$@" > "$dir/options"
+    fi
+    printf '%s' "$query" > "$dir/query"
+    echo "$kind" > "$dir/kind"
+    case "$kind" in
+        choose) echo "$header  (enter: validate, esc: cancel)" > "$dir/header" ;;
+        multi) echo "$header  (tab: toggle, enter: validate, esc: cancel)" > "$dir/header" ;;
+        input) echo "$header  (type, enter: validate, esc: cancel)" > "$dir/header" ;;
+        write) echo "$header  (several values separated by spaces, enter: validate)" > "$dir/header" ;;
+    esac
+    echo "answer" > "$DUMP_STATE_DIR/mode"
+    fzf_post "reload-sync(cat $dir/options)+transform-header(cat $dir/header)+change-prompt(❓ ❯ )+transform-query(cat $dir/query)+deselect-all+first+refresh-preview"
+    # Separate request: the list must be reloaded before moving / selecting in it
+    if [[ -n "$actions" ]]; then
+        sleep "$ASK_POLL_DELAY"
+        fzf_post "${actions#+}"
+    fi
+
+    while [[ ! -f "$dir/status" ]]; do
+        sleep "$ASK_POLL_DELAY"
+    done
+    if [[ "$(cat "$dir/status")" != "ok" ]]; then
+        return 1
+    fi
+    cat "$dir/answer"
+}
+
+# Choose options: ask_choose [--multi] [--selected <a,b>] <header> <option...> (one answer per line)
+ask_choose() {
+    local multi=false
+    local selected=""
+    local header
+    local actions=""
+    local i
+
+    while [[ "${1:-}" == --* ]]; do
+        case "$1" in
+            --multi) multi=true; shift ;;
+            --selected) selected="$2"; shift 2 ;;
+        esac
+    done
+    header="$1"
+    shift
+
+    if ! in_menu; then
+        if [[ "$multi" == true ]]; then
+            gum choose --no-limit --selected="$selected" --header "$header" "$@"
+        else
+            gum choose --header "$header" "$@"
+        fi
+        return
+    fi
+    if [[ "$multi" == false ]]; then
+        menu_ask choose "$header" "" "" "$@"
+        return
+    fi
+    # Pre-selection: move on each selected option and select it
+    for ((i = 1; i <= $#; i++)); do
+        if [[ ",$selected," == *",${!i},"* ]]; then
+            actions+="+pos($i)+select"
+        fi
+    done
+    menu_ask multi "$header" "" "$actions+first" "$@"
+}
+
+# Ask a text: ask_input <header> [default]
+ask_input() {
+    if ! in_menu; then
+        gum input --placeholder "$1" --value "${2:-}"
+        return
+    fi
+    menu_ask input "$1" "${2:-}" ""
+}
+
+# Ask several values (one per line in the answer): ask_write <header>
+ask_write() {
+    if ! in_menu; then
+        gum write --height=10 --placeholder "$1 (one per line, ctrl+d to validate)"
+        return
+    fi
+    menu_ask write "$1" "" ""
 }
 
 # =========================
