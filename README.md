@@ -22,8 +22,9 @@ sudo make
 > Once the dotfiles are installed, the `dump` alias of the zshrc runs `sudo make` in this repository (path written by the Dotfile setup, wherever it was cloned).
 
 > [!NOTE]
-> Every setup is chosen from a `fzf` menu showing the details of the hovered setup, and can also be run alone:
-> `sudo bash Fedora/<setup>/launch.sh`. The usb keys can be chosen again from the menu (`Usb Keys`).
+> Every setup is run from a `fzf` menu that stays open: the details of the hovered setup, the status and the end of
+> the log of its last run are shown on the right (`ctrl-l`: full log). The usb keys can be chosen again from the
+> menu (`Usb Keys`) and every setup can also be run alone: `sudo bash Fedora/<setup>/launch.sh`.
 
 ## Content of Dotfile, Package & App, Custom Package & AI
 

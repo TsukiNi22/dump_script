@@ -58,8 +58,12 @@ ok() {
     echo "[  ${GREEN}OK${RESET}  ] $*"
 }
 
+# On stderr (+ in the log of the menu run: only stdout goes through its tee)
 failed() {
     echo "[${RED}${BOLD}FAILED${RESET}] $*" >&2
+    if [[ -n "${DUMP_LOG:-}" ]]; then
+        echo "[${RED}${BOLD}FAILED${RESET}] $*" >> "$DUMP_LOG"
+    fi
 }
 
 skipped() {
