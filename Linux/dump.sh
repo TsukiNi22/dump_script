@@ -508,24 +508,24 @@ center_on() {
     printf '%*s%s\n' $((($1 - $2) / 2)) "" "$3"
 }
 
-# Under the logs (they stay above): title, then "PRESS ANY KEY" blinking like an arcade machine until a key
-# press_any_key <columns> <title> <title width>
+# End of the logs, aligned on them: result line, then "Press any key to continue..." blinking until a key
+# press_any_key <margin> <result line>
 press_any_key() {
-    local columns="$1"
-    local title="$2"
-    local title_width="$3"
+    local margin="$1"
+    local result="$2"
     local visible=true
     local key
 
     # Keys typed during the loading don't count
     while read -rsn 1 -t 0.01 key < /dev/tty; do :; done
     echo
-    center_on "$columns" "$title_width" "$title"
+    echo "$margin$result"
+    echo
     while true; do
         # Rewritten in place: back to the start of the line, line cleared
         printf '\r\033[2K'
         if [[ "$visible" == true ]]; then
-            printf '%*s%s' $(((columns - 17) / 2)) "" "${MAGENTA}${BOLD}▶ PRESS ANY KEY ◀${RESET}"
+            printf '%s%s' "$margin" "${GREY}Press any key to continue...${RESET}"
             visible=false
         else
             visible=true
@@ -546,10 +546,12 @@ loading_screen() {
     local status=0
     local line
     local subtitle
+    local margin
 
     columns=$(tput cols)
     lines=$(tput lines)
     width=$((columns - 4 < LOADING_LOG_WIDTH ? columns - 4 : LOADING_LOG_WIDTH))
+    margin=$(printf '%*s' $(((columns - width) / 2)) "")
     clear
     tput civis
     echo
@@ -568,14 +570,14 @@ loading_screen() {
     (
         export DUMP_LOG="$log"
         task_update 2>&1
-    ) < /dev/null | tee "$log" | RENDER_WIDTH="$width" RENDER_MARGIN="$(printf '%*s' $(((columns - width) / 2)) "")" \
+    ) < /dev/null | tee "$log" | RENDER_WIDTH="$width" RENDER_MARGIN="$margin" \
         render_log full || status=1
     if [[ "$status" -ne 0 ]] || ! command -v fzf > /dev/null; then
         echo "FAILED SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$columns" "${RED}${BOLD}✘ UPDATE FAILED${RESET}" 15
+        press_any_key "$margin" "${RED}${BOLD}✘${RESET} ${BOLD}Update failed${RESET} ${GREY}(details in System Update)${RESET}"
     else
         echo "OK SYSTEM-UPDATE $(date +%H:%M:%S)" > "$DUMP_STATE_DIR/System_Update.status"
-        press_any_key "$columns" "${GREEN}${BOLD}✔ READY${RESET}" 7
+        press_any_key "$margin" "${GREEN}${BOLD}✔${RESET} ${BOLD}Ready${RESET}"
     fi
     echo "System_Update" > "$DUMP_STATE_DIR/last"
     printf '\033[r'
