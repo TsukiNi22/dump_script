@@ -79,3 +79,51 @@ box_open "SSH-PUB"
 cat "$SSH_KEY.pub"
 box_close "SSH-PUB"
 info "Add this key on https://github.com/settings/keys"
+
+# =========================
+# Repositories
+# =========================
+# Clone with https (works before the key is added on github), push with ssh: clone_repo <url> <folder>
+clone_repo() {
+    local url="$1"
+    local dest="$2"
+    local push_url="$url"
+
+    if [[ -d "$dest/.git" ]]; then
+        ok "$dest already cloned"
+        return 0
+    fi
+    if [[ "$url" =~ ^https://github\.com/(.+)$ ]]; then
+        push_url="git@github.com:${BASH_REMATCH[1]}"
+    fi
+    run_as_user mkdir -p "$(dirname "$dest")"
+    if run_as_user git clone -q "$url" "$dest" && run_as_user git -C "$dest" remote set-url --push origin "$push_url"; then
+        ok "Clone of $url ($dest)"
+    else
+        failed "Clone of $url"
+        return 1
+    fi
+}
+
+CHOICES=$(gum choose --no-limit --header "Repositories to clone:" \
+    "libutils" "skills" "cpp_project_template" "Other links") || CHOICES=""
+mapfile -t SELECTED <<< "$CHOICES"
+status=0
+for choice in "${SELECTED[@]}"; do
+    case "$choice" in
+        "libutils"|"cpp_project_template")
+            clone_repo "https://github.com/$GITHUB_USER/$choice.git" "$USER_HOME/personal_delivery/cpp/$choice" || status=1 ;;
+        "skills")
+            clone_repo "https://github.com/$GITHUB_USER/skills.git" "$SKILLS_DIR" || status=1 ;;
+        "Other links")
+            links=$(gum write --height=10 --placeholder "One repository link per line (ctrl+d to validate)") || links=""
+            dest_dir=$(gum input --value "$USER_HOME/personal_delivery" --placeholder "Folder of the clones")
+            while read -r link; do
+                [[ -z "$link" ]] && continue
+                name=$(basename "$link" .git)
+                clone_repo "$link" "${dest_dir:-$USER_HOME/personal_delivery}/$name" < /dev/null || status=1
+            done <<< "$links"
+            ;;
+    esac
+done
+exit "$status"
