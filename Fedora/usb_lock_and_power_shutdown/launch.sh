@@ -38,7 +38,16 @@ if usb_is_plugged "$VENDOR_ID" "$DEVICE_ID"; then
         "Both (Deactivation)" \
         "Cancel") || CHOICE="Cancel"
 else
-    CHOICE="Both (Deactivation)"
+    # Without usb only the deactivation of what is installed is possible
+    OPTIONS=()
+    [[ -f "$USB_RULE" ]] && OPTIONS+=("USB Lock (Deactivation)")
+    [[ -f "$POWER_RULE" ]] && OPTIONS+=("Power Shutdown (Deactivation)")
+    [[ ${#OPTIONS[@]} -eq 2 ]] && OPTIONS+=("Both (Deactivation)")
+    if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+        info "Nothing to deactivate (no main usb to activate them)"
+        exit 0
+    fi
+    CHOICE=$(gum choose --header "No main usb: deactivation only" "${OPTIONS[@]}" "Cancel") || CHOICE="Cancel"
 fi
 
 # =========================
