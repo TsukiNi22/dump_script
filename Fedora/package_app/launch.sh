@@ -12,28 +12,15 @@ FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
 VSCODE_KEY="https://packages.microsoft.com/keys/microsoft.asc"
 FAILED_STEPS=()
 
-# Run a step inside a box, record it when it fails
+# Run a step, record it when it fails (the next steps still run)
 step() {
-    local name="$1"
-    local label="$2"
-    local status=0
-    shift 2
-
-    box_open "$name"
-    "$@" || status=1
-    box_close "$name"
-    if [[ "$status" -ne 0 ]]; then
-        failed "$label"
-        FAILED_STEPS+=("$label")
-    else
-        ok "$label"
-    fi
+    run_step "$@" || FAILED_STEPS+=("$2")
 }
 
 # =========================
 # Steps
 # =========================
-# Commands chained with && -> set -e is ignored inside a function called by step
+# Commands chained with && (see run_step)
 setup_vscode_repo() {
     rpm --import "$VSCODE_KEY" && cat > /etc/yum.repos.d/vscode.repo <<VSCODE
 [code]

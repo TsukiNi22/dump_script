@@ -67,6 +67,24 @@ install_packages() {
     ok "Download package"
 }
 
+# Run a step inside a box and report it, return 1 on failure: run_step <NAME> <label> <command...>
+# (set -e is ignored inside the command -> chain its commands with &&)
+run_step() {
+    local name="$1"
+    local label="$2"
+    local status=0
+    shift 2
+
+    box_open "$name"
+    "$@" || status=1
+    box_close "$name"
+    if [[ "$status" -ne 0 ]]; then
+        failed "$label"
+        return 1
+    fi
+    ok "$label"
+}
+
 # Run a command as the user who launched the setup through sudo
 run_as_user() {
     sudo -u "$SUDO_USER" -H "$@"
@@ -87,6 +105,15 @@ escape_sed() {
     printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
 }
 
+# Run the setup.sh of the skills repository as the user (local clone of the Git setup, managed clone otherwise)
+skills_setup() {
+    if [[ -f "$SKILLS_DIR/setup.sh" ]]; then
+        run_as_user bash "$SKILLS_DIR/setup.sh" "$@"
+    else
+        run_as_user bash -c 'curl -fsSL "$0" | bash -s -- "$@"' "$SKILLS_SETUP_URL" "$@"
+    fi
+}
+
 # Check that a usb with the given vendor-id and device-id is plugged
 usb_is_plugged() {
     [[ -n "$1" && -n "$2" ]] && lsusb -d "$1:$2" > /dev/null 2>&1
@@ -100,3 +127,10 @@ if [[ $EUID -ne 0 || -z "${SUDO_USER:-}" || "${SUDO_USER:-}" == "root" ]]; then
     exit 1
 fi
 USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+
+# =========================
+# Repositories
+# =========================
+GITHUB_USER="TsukiNi22"
+SKILLS_DIR="$USER_HOME/personal_delivery/other/skills" # Clone of the Git setup (base repositories)
+SKILLS_SETUP_URL="https://raw.githubusercontent.com/$GITHUB_USER/skills/main/setup.sh"
