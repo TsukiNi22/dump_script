@@ -20,8 +20,11 @@ user_git_config() {
     run_as_user git config --global "$@"
 }
 
-name=$(ask_input "Github username:" "$(user_git_config user.name || true)") || name=""
-email=$(ask_input "Github email:" "$(user_git_config user.email || true)") || email=""
+if ! name=$(ask_input "Github username:" "$(user_git_config user.name || true)") \
+    || ! email=$(ask_input "Github email:" "$(user_git_config user.email || true)"); then
+    skipped "Git setup"
+    exit 0
+fi
 if [[ -z "$name" || -z "$email" ]]; then
     failed "The github username and email are required"
     exit 1

@@ -60,7 +60,7 @@ mode() {
 # =========================
 # Usb selection
 # =========================
-# Ask a usb, print "<vendor-id>\n<device-id>" (empty when none)
+# Ask a usb, print "<vendor-id>\n<device-id>" (empty when none), return 1 when cancelled
 select_usb() {
     local header="$1"
     local -a choices=()
@@ -69,11 +69,11 @@ select_usb() {
     local device_id=""
 
     mapfile -t choices < <(lsusb | awk '{print $6 " - " substr($0, index($0, $7))}')
-    selected=$(ask_choose "$header" "${choices[@]}" "Manual" "None") || selected="None"
+    selected=$(ask_choose "$header" "${choices[@]}" "Manual" "None") || return 1
     case "$selected" in
         "Manual")
-            vendor_id=$(ask_input "Usb vendor-id (ex: ffff):") || vendor_id=""
-            device_id=$(ask_input "Usb device-id (ex: 5678):") || device_id=""
+            vendor_id=$(ask_input "Usb vendor-id (ex: ffff):") || return 1
+            device_id=$(ask_input "Usb device-id (ex: 5678):") || return 1
             ;;
         "None"|"")
             ;;
@@ -101,13 +101,23 @@ check_usb() {
 }
 
 # Ask the main & cancel usb, saved in the state (one value per line: an empty id must not shift the others)
+# Cancelled -> the current keys are kept, return 1
 select_usbs() {
+    local answer
     local -a main=()
     local -a cancel=()
 
-    mapfile -t main < <(select_usb "Main usb (optional but recommended):")
+    if ! answer=$(select_usb "Main usb (optional but recommended):"); then
+        skipped "Usb keys unchanged"
+        return 1
+    fi
+    mapfile -t main <<< "$answer"
     check_usb "main" "${main[0]:-}" "${main[1]:-}"
-    mapfile -t cancel < <(select_usb "Cancel usb (optional):")
+    if ! answer=$(select_usb "Cancel usb (optional):"); then
+        skipped "Usb keys unchanged"
+        return 1
+    fi
+    mapfile -t cancel <<< "$answer"
     check_usb "cancel" "${cancel[0]:-}" "${cancel[1]:-}"
     printf '%s\n' "${main[0]:-}" "${main[1]:-}" "${cancel[0]:-}" "${cancel[1]:-}" > "$USB_STATE_FILE"
 }
@@ -130,7 +140,7 @@ task_update() {
 
 task_usb_keys() {
     section "USB-KEYS"
-    select_usbs
+    select_usbs || true
 }
 
 # Run a setup script: task_setup <script> [arg...]
@@ -146,10 +156,14 @@ task_usb_setup() {
     load_usbs
     if ! usb_is_plugged "$vendor_id" "$device_id"; then
         choice=$(ask_choose "$TASK_NAME needs the main usb key:" \
-            "Choose the usb key now" "Deactivation only" "Cancel") || choice="Cancel"
+            "Choose the usb key now" "Deactivation only") || choice="Cancel"
         case "$choice" in
             "Choose the usb key now")
-                task_usb_keys
+                section "USB-KEYS"
+                if ! select_usbs; then
+                    skipped "$TASK_NAME (no usb key)"
+                    return 0
+                fi
                 load_usbs
                 section "$TASK_NAME"
                 ;;

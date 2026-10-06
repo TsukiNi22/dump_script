@@ -162,11 +162,13 @@ menu_ask() {
 }
 
 # Choose options: ask_choose [--multi] [--selected <a,b>] <header> <option...> (one answer per line)
+# A "Cancel" option is always added (last): choosing it = esc, return 1
 ask_choose() {
     local multi=false
     local selected=""
     local header
     local actions=""
+    local answer
     local i
 
     while [[ "${1:-}" == --* ]]; do
@@ -177,26 +179,31 @@ ask_choose() {
     done
     header="$1"
     shift
+    if [[ "${!#}" != "Cancel" ]]; then
+        set -- "$@" "Cancel"
+    fi
 
     if ! in_menu; then
         if [[ "$multi" == true ]]; then
-            gum choose --no-limit --selected="$selected" --header "$header" "$@"
+            answer=$(gum choose --no-limit --selected="$selected" --header "$header" "$@") || return 1
         else
-            gum choose --header "$header" "$@"
+            answer=$(gum choose --header "$header" "$@") || return 1
         fi
-        return
+    elif [[ "$multi" == false ]]; then
+        answer=$(menu_ask choose "$header" "" "" "$@") || return 1
+    else
+        # Pre-selection: move on each selected option and select it
+        for ((i = 1; i <= $#; i++)); do
+            if [[ ",$selected," == *",${!i},"* ]]; then
+                actions+="+pos($i)+select"
+            fi
+        done
+        answer=$(menu_ask multi "$header" "" "$actions+first" "$@") || return 1
     fi
-    if [[ "$multi" == false ]]; then
-        menu_ask choose "$header" "" "" "$@"
-        return
+    if [[ -z "$answer" ]] || grep -qx "Cancel" <<< "$answer"; then
+        return 1
     fi
-    # Pre-selection: move on each selected option and select it
-    for ((i = 1; i <= $#; i++)); do
-        if [[ ",$selected," == *",${!i},"* ]]; then
-            actions+="+pos($i)+select"
-        fi
-    done
-    menu_ask multi "$header" "" "$actions+first" "$@"
+    echo "$answer"
 }
 
 # Ask a text: ask_input <header> [default]
