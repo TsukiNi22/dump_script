@@ -10,6 +10,7 @@ RPM_FUSION_URL="https://download1.rpmfusion.org"
 FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
 VSCODE_KEY="https://packages.microsoft.com/keys/microsoft.asc"
 VSCODE_KEYRING="/usr/share/keyrings/microsoft.gpg"
+ASCIIQUARIUM_URL="https://raw.githubusercontent.com/cmatsuoka/asciiquarium/master/asciiquarium"
 FAILED_STEPS=()
 
 # Run a step, record it when it fails (the next steps still run)
@@ -55,6 +56,28 @@ VSCODE
     esac
 }
 
+# From the repositories, else from its sources (debian: removed, arch: AUR only) with its perl modules
+setup_asciiquarium() {
+    local name
+
+    name=$(pkg_name asciiquarium)
+    if [[ -n "$name" ]] && pkg_available "$name"; then
+        pkg_install asciiquarium
+        return
+    fi
+    if ! perl -MTerm::Animation -MCurses -e 1 2> /dev/null; then
+        case "$OS_FAMILY" in
+            deb) pkg_install libterm-animation-perl libcurses-perl ;;
+            arch) pkg_install perl make gcc ncurses ;;
+        esac
+    fi
+    # Not in the repositories: built by cpan
+    if ! perl -MTerm::Animation -MCurses -e 1 2> /dev/null; then
+        PERL_MM_USE_DEFAULT=1 cpan -T Curses Term::Animation || return 1
+    fi
+    curl -fsSL -o /usr/local/bin/asciiquarium "$ASCIIQUARIUM_URL" && chmod 755 /usr/local/bin/asciiquarium
+}
+
 setup_wireshark() {
     # debian: allow the non-root captures (debconf question)
     if [[ "$OS_FAMILY" == "deb" ]]; then
@@ -73,7 +96,8 @@ setup_docker() {
 # Program
 # =========================
 step "BASE-PACKAGE" "Download base package" \
-    pkg_install dnf-plugins-core flatpak git curl wget gpg tree ripgrep gh asciiquarium
+    pkg_install dnf-plugins-core flatpak git curl wget gpg tree ripgrep gh
+step "ASCIIQUARIUM" "Setup of asciiquarium" setup_asciiquarium
 if [[ "$OS_FAMILY" == "rpm" ]]; then
     step "SETUP-RPM-FUSION" "Setup RPM Fusion" setup_rpm_fusion
 fi

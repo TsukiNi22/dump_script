@@ -351,6 +351,15 @@ pkg_update() {
     esac
 }
 
+# Charm repository (gum isn't in the debian-like repositories)
+setup_charm_repo() {
+    command -v gpg > /dev/null || DEBIAN_FRONTEND=noninteractive apt-get install -y gpg
+    install -d -m 0755 /etc/apt/keyrings \
+        && curl -fsSL "$CHARM_KEY_URL" | gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg \
+        && echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] $CHARM_REPO_URL * *" > /etc/apt/sources.list.d/charm.list \
+        && apt-get update
+}
+
 # Install packages (fedora names, translated for the family), the missing ones are reported and skipped
 pkg_install() {
     local package
@@ -361,6 +370,9 @@ pkg_install() {
         name=$(pkg_name "$package")
         if [[ -z "$name" ]]; then
             continue
+        fi
+        if [[ "$OS_FAMILY:$name" == "deb:gum" ]] && ! pkg_available gum; then
+            setup_charm_repo > /dev/null || warning "Charm repository (gum) can't be added"
         fi
         if [[ "$package" == http* ]] || pkg_available "$name"; then
             names+=("$name")
@@ -480,4 +492,6 @@ USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 # =========================
 GITHUB_USER="TsukiNi22"
 SKILLS_DIR="$USER_HOME/personal_delivery/other/skills" # Clone of the Git setup (base repositories)
+CHARM_KEY_URL="https://repo.charm.sh/apt/gpg.key"
+CHARM_REPO_URL="https://repo.charm.sh/apt/"
 SKILLS_SETUP_URL="https://raw.githubusercontent.com/$GITHUB_USER/skills/main/setup.sh"

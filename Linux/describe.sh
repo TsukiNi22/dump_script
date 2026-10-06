@@ -41,12 +41,13 @@ format() {
             echo "Activate (main usb plugged):"
             echo "  - build pam_usb from github.com/mcdope/pam_usb"
             echo "  - write /etc/security/pam_usb.conf (vendor, model, serial, volume uuid of the main usb)"
-            echo "  - replace /etc/pam.d/system-auth & password-auth:"
-            echo "    password AND main usb required to log in / unlock / sudo"
+            echo "  - password AND main usb required to log in / unlock / sudo:"
+            echo "    fedora: marked block in system-auth & password-auth (rebuilt by authselect first)"
+            echo "    debian: pam-auth-update profile, arch: marked block in system-auth"
             echo
             echo "Deactivate:"
-            echo "  - put back the auth files without pam_usb (password only)"
-            note "The auth files are only replaced when pam_usb.so is installed (no login lock-out)"
+            echo "  - remove the block / profile (password only)"
+            note "Enabled only when pam_usb.so is in the pam folder with all its libraries (no lock-out)"
             ;;
         "Usb Lock & Power Shutdown"*)
             title "Usb Lock & Power Shutdown"

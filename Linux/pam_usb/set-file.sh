@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage: sudo bash pam_usb/set-file.sh <vendor-id> <device-id>
-# Write /etc/security/pam_usb.conf for the given usb and enable pam_usb in the auth stacks
+# Write /etc/security/pam_usb.conf for the given usb (the auth stack is edited by launch.sh)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -60,7 +60,3 @@ ok "Set of the pam_usb.conf variables"
 
 install_root_file 644 "$tmp_conf" /etc/security/pam_usb.conf
 ok "Pam usb config file setup"
-install_root_file 644 "$SCRIPT_DIR/system-auth" /etc/pam.d/system-auth
-ok "Pam usb system-auth"
-install_root_file 644 "$SCRIPT_DIR/password-auth" /etc/pam.d/password-auth
-ok "Pam usb password-auth"

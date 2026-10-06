@@ -203,14 +203,10 @@ menu_entries() {
     if [[ -n "$vendor_id" ]]; then
         usb_keys="${GREY}(main: $vendor_id:$device_id, cancel: ${cancel_vendor_id:-none}:${cancel_device_id:-none})${RESET}"
     fi
-    local pam_state="$usb_state"
-    if [[ "$OS_FAMILY" != "rpm" ]]; then
-        pam_state=" ${GREY}(fedora-like only)${RESET}"
-    fi
     printf '%s\n' \
         "System Update" \
         "Usb Keys $usb_keys" \
-        "Pam Usb$pam_state" \
+        "Pam Usb$usb_state" \
         "Usb Lock & Power Shutdown$usb_state" \
         "Screen Of Intruder$usb_state" \
         "Dotfile" \

@@ -15,7 +15,7 @@
 
 > [!NOTE]
 > The package names are translated for each family, a package missing from the repositories of the distribution is
-> reported and skipped. `Pam Usb` is fedora-like only (it replaces the `authselect` pam files).
+> reported and skipped (or installed another way: `gum` from the Charm repository, `asciiquarium` from its sources...).
 
 Clone the repository:
 ```bash
@@ -86,8 +86,9 @@ Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then cl
 | Other links (one per line) | Chosen folder (default: `~/personal_delivery`) |
 
 > [!CAUTION]
-> The Pam Usb setup replaces `/etc/pam.d/system-auth` and `/etc/pam.d/password-auth` (managed by `authselect`):
-> an `authselect apply-changes` puts back the default ones.
+> The Pam Usb setup requires the usb key (password AND usb) in the auth stack: a marked block at the start of
+> `/etc/pam.d/system-auth` (+ `password-auth` on fedora-like, rebuilt by `authselect` first) or a `pam-auth-update`
+> profile on debian-like. It is only enabled when `pam_usb.so` is installed with all its libraries.
 
 ## Get Information about usb id (`vendor-id` / `device-id`)
 
