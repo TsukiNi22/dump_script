@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en" data-page="guide" data-storage-key="dump-script" data-repo="TsukiNi22/dump_script">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dump_script · User guide</title>
+<style>
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1d1f23;
+  --muted: #5d636e;
+  --border: #dfe1e5;
+  --accent: #2f5bd3;
+  --accent-soft: #e6ecfb;
+  --warn: #a8540a;
+  --warn-soft: #fbefe3;
+  --ok: #1f7a4a;
+  --ok-soft: #e3f4ea;
+  --code-bg: #f1f2f4;
+  --node: #ffffff;
+  --node-alt: #eef1f8;
+  --line: #8a909b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b;
+    --surface: #1d2025;
+    --text: #e6e7ea;
+    --muted: #9aa0ab;
+    --border: #30343b;
+    --accent: #7d9cf0;
+    --accent-soft: #232c45;
+    --warn: #f0a868;
+    --warn-soft: #3a2a1b;
+    --ok: #6fcf97;
+    --ok-soft: #1b3326;
+    --code-bg: #24272d;
+    --node: #23262c;
+    --node-alt: #283043;
+    --line: #747a85;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b;
+  --surface: #1d2025;
+  --text: #e6e7ea;
+  --muted: #9aa0ab;
+  --border: #30343b;
+  --accent: #7d9cf0;
+  --accent-soft: #232c45;
+  --warn: #f0a868;
+  --warn-soft: #3a2a1b;
+  --ok: #6fcf97;
+  --ok-soft: #1b3326;
+  --code-bg: #24272d;
+  --node: #23262c;
+  --node-alt: #283043;
+  --line: #747a85;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 40px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+main { min-width: 0; }
+header h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; }
+header p { color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  scroll-margin-top: 72px;
+}
+h2 { font-size: 22px; margin: 0 0 16px; }
+h3 { font-size: 17px; margin: 28px 0 10px; }
+p, li { max-width: 75ch; }
+a { color: var(--accent); }
+code {
+  font: 0.9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+pre code { background: none; padding: 0; }
+.table-wrap { overflow-x: auto; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.callout {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+}
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+.callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+figure { margin: 20px 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg .box { fill: var(--node); stroke: var(--line); stroke-width: 1.2; }
+svg .box-alt { fill: var(--node-alt); stroke: var(--accent); stroke-width: 1.2; }
+svg .group { fill: none; stroke: var(--border); stroke-width: 1.5; stroke-dasharray: 5 4; }
+svg .lbl { fill: var(--text); font: 13px system-ui, sans-serif; }
+svg .small { fill: var(--muted); font: 11.5px system-ui, sans-serif; }
+svg .title { fill: var(--muted); font: 600 12px system-ui, sans-serif; letter-spacing: .05em; }
+svg .edge { stroke: var(--line); stroke-width: 1.4; fill: none; }
+svg .edge-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+svg .dash { stroke-dasharray: 4 4; }
+svg .arrow { fill: var(--line); }
+svg .arrow-accent { fill: var(--accent); }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 16px 0; }
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 18px 46px;
+  border-left: 2px solid var(--border);
+  margin-left: 15px;
+}
+.steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.steps > li::before {
+  content: counter(step);
+  position: absolute; left: -16px; top: -2px;
+  display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: var(--surface);
+  font-weight: 700; font-size: 14px;
+}
+.steps > li > strong:first-child { display: block; margin-bottom: 2px; }
+kbd {
+  font: 0.85em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid var(--border); border-bottom-width: 2px;
+  background: var(--surface);
+}
+details.faq { border-bottom: 1px solid var(--border); padding: 10px 0; }
+details.faq summary { cursor: pointer; font-weight: 600; list-style: none; }
+details.faq summary::-webkit-details-marker { display: none; }
+details.faq summary::before { content: "+"; display: inline-block; width: 18px; color: var(--accent); font-weight: 700; }
+details.faq[open] summary::before { content: "−"; }
+details.faq > :not(summary) { margin: 8px 0 0 18px; }
+.lead { font-size: 17px; }
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 18px;
+  height: 56px; padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tabs { display: flex; gap: 4px; margin-left: 8px; overflow-x: auto; }
+.tabs[hidden] { display: none; }
+.tabs a {
+  padding: 6px 12px; border-radius: 6px;
+  color: var(--muted); text-decoration: none; font-size: 14px; white-space: nowrap;
+}
+.tabs a:hover { color: var(--text); background: var(--code-bg); }
+.tabs a.current { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.topbar .spacer { flex: 1; }
+.icon-btn {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; padding: 0;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 50%;
+  cursor: pointer; text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon-btn svg { width: 18px; height: 18px; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; padding: 24px 16px 60px; gap: 16px; }
+  .topbar { gap: 10px; padding: 0 12px; }
+  .brand .ver { display: none; }
+  .menu-btn { display: grid; }
+  .sidebar { position: fixed; top: 56px; left: 0; bottom: 0; z-index: 25; width: min(300px, 85vw); max-height: none; padding: 16px 10px; background: var(--bg); border-right: 1px solid var(--border); transform: translateX(-105%); transition: transform .2s; }
+  .sidebar.open { transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, .25); }
+  section { padding: 20px 16px; }
+  header h1 { font-size: 27px; }
+}
+/* Language switch (EN / FR pill) */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  border: 1.5px solid var(--border); border-radius: 999px; background: var(--surface);
+}
+.lang-switch button {
+  border: 0; background: none; color: var(--text); cursor: pointer;
+  font: 600 12.5px system-ui, sans-serif; letter-spacing: .03em;
+  padding: 4px 11px; border-radius: 999px; transition: background .2s, color .2s;
+}
+.lang-switch button.on { background: var(--accent); color: var(--surface); }
+.lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Theme switch: blue track + sun (light), black track + moon and stars (dark) */
+.theme-switch {
+  position: relative; width: 58px; height: 30px; flex: none; padding: 0; border: 0; border-radius: 999px;
+  background: #2196f3; cursor: pointer; transition: background .3s;
+}
+.theme-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-switch .knob {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; transition: transform .3s, background .3s;
+}
+.theme-switch .knob svg { width: 22px; height: 22px; }
+.theme-switch .sun { display: block; }
+.theme-switch .moon, .theme-switch .stars { display: none; }
+.theme-switch .stars { position: absolute; inset: 0; }
+.theme-switch .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
+.theme-switch .stars i:nth-child(1) { left: 9px; top: 9px; }
+.theme-switch .stars i:nth-child(2) { left: 16px; top: 18px; width: 1.5px; height: 1.5px; }
+.theme-switch .stars i:nth-child(3) { left: 21px; top: 8px; width: 1.5px; height: 1.5px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-switch { background: #0b0b0d; box-shadow: inset 0 0 0 1px #2a2c31; }
+  :root:not([data-theme="light"]) .theme-switch .knob { transform: translateX(28px); background: #ffffff; }
+  :root:not([data-theme="light"]) .theme-switch .sun { display: none; }
+  :root:not([data-theme="light"]) .theme-switch .moon, :root:not([data-theme="light"]) .theme-switch .stars { display: block; }
+}
+:root[data-theme="dark"] .theme-switch { background: #0b0b0d; box-shadow: inset 0 0 0 1px #2a2c31; }
+:root[data-theme="dark"] .theme-switch .knob { transform: translateX(28px); background: #ffffff; }
+:root[data-theme="dark"] .theme-switch .sun { display: none; }
+:root[data-theme="dark"] .theme-switch .moon, :root[data-theme="dark"] .theme-switch .stars { display: block; }
+/* Bilingual content: only the active language is shown */
+:root[lang="en"] [data-lang="fr"], :root[lang="fr"] [data-lang="en"] { display: none !important; }
+/* ---------- Header: logo + version badge, mobile menu ---------- */
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; white-space: nowrap; }
+.brand .logo { width: 26px; height: 26px; flex: none; color: var(--accent); object-fit: contain; }
+.brand .ver { font-size: 12px; color: var(--muted); font-weight: 500; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; }
+.brand .ver:empty { display: none; } /* no version: the name alone */
+.menu-btn { display: none; }
+/* ---------- Sidebar tree (pages > sections of the current page) ---------- */
+.sidebar { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 100px); overflow-y: auto; font-size: 14px; }
+@media (max-width: 860px) { .sidebar { position: fixed; top: 56px; max-height: none; } } /* off-canvas menu: out of the flow */
+.sidebar p { margin: 0 0 8px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.sidebar a { display: block; padding: 5px 10px; color: var(--muted); text-decoration: none; border-left: 2px solid var(--border); }
+.sidebar a:hover, .sidebar a.active { color: var(--accent); border-left-color: var(--accent); }
+/* ---------- Page header: eyebrow + title + lead ---------- */
+.page-eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-bottom: 6px; }
+header .lead { font-size: 17px; color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+/* ---------- Heading anchors ---------- */
+h2 .anchor, h3 .anchor { margin-left: 8px; color: var(--muted); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity .15s; }
+h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
+/* ---------- Code blocks: title bar + copy button ---------- */
+pre { position: relative; }
+pre[data-title]::before {
+  content: attr(data-title); display: block; margin: -14px -16px 12px; padding: 6px 16px;
+  font: 12px system-ui, sans-serif; color: var(--muted); border-bottom: 1px solid var(--border);
+  background: var(--surface); border-radius: 8px 8px 0 0;
+}
+pre .copy {
+  position: absolute; top: 8px; right: 8px; font: 12px system-ui, sans-serif; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  border-radius: 6px; padding: 3px 8px; opacity: 0; transition: opacity .15s;
+}
+pre[data-title] .copy { top: 5px; }
+pre:hover .copy, pre .copy:focus { opacity: 1; }
+pre .copy:hover { color: var(--text); }
+/* ---------- Content tabs ---------- */
+.ctabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin: 12px 0; }
+.ctabs button { background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 12px; cursor: pointer; color: var(--muted); font: 500 14px system-ui, sans-serif; }
+.ctabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.ctab-panel { display: none; }
+.ctab-panel.active { display: block; }
+/* ---------- Previous / next page ---------- */
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 32px; }
+.pager a { flex: 1; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-decoration: none; }
+.pager a:hover { border-color: var(--accent); }
+.pager a span { display: block; font-size: 12px; color: var(--muted); }
+.pager a.next { text-align: right; }
+.pager:empty { display: none; }
+/* ---------- Footer ---------- */
+footer.site { max-width: 1180px; margin: 0 auto; padding: 22px 24px 30px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+footer.site a { color: var(--accent); }
+@media (max-width: 860px) {
+  .menu-btn { display: grid; }
+  footer.site { padding: 20px 16px; }
+  .topbar .tabs { display: none; } /* the sidebar (menu) gives the navigation on mobile */
+}
+.topbar .icon-btn, .topbar .lang-switch, .topbar .theme-switch { flex: none; }
+.topbar .tabs { min-width: 0; }
+@media (max-width: 860px) {
+  .topbar .spacer { display: none; }
+  .topbar .tabs { flex: 1 1 auto; }
+  .topbar .icon-btn { width: 32px; height: 32px; }
+}
+@media (max-width: 480px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .topbar a.icon-btn[href] { display: none; } /* GitHub link: also in the footer / graph panel */
+  .lang-switch button { padding: 4px 9px; }
+}
+@media (min-width: 1340px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 880px) minmax(0, 1fr); max-width: none; }
+  .layout > .sidebar { grid-column: 1; justify-self: end; width: 230px; }
+  .layout > main { grid-column: 2; }
+  footer.site { max-width: 880px; }
+}
+/* ---------- No scroll beyond the page ---------- */
+html, body { overscroll-behavior: none; }
+/* ---------- Top right actions: same height, grouped, divider ---------- */
+.top-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.top-actions .divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+.top-actions .icon-btn { width: 34px; height: 34px; }
+.top-actions .lang-switch { height: 34px; padding: 3px; background: var(--code-bg); border: 1px solid var(--border); }
+.top-actions .lang-switch button { height: 26px; padding: 0 10px; font-size: 12px; }
+.top-actions .theme-switch { width: 56px; height: 30px; border: 1px solid transparent; }
+.top-actions .theme-switch .knob { top: 2px; left: 2px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .top-actions .theme-switch { border-color: var(--border); box-shadow: none; }
+  :root:not([data-theme="light"]) .top-actions .theme-switch .knob { transform: translateX(26px); }
+}
+:root[data-theme="dark"] .top-actions .theme-switch { border-color: var(--border); box-shadow: none; }
+:root[data-theme="dark"] .top-actions .theme-switch .knob { transform: translateX(26px); }
+@media (max-width: 480px) { .top-actions .divider { display: none; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn menu-btn" type="button" id="menuBtn" aria-label="Open the navigation" data-i18n-aria-label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><!-- default logo: replace with the project logo (inline SVG, currentColor) --><rect x="4" y="4" width="18" height="22" rx="3" fill="currentColor" opacity=".35"/><rect x="9" y="7" width="18" height="22" rx="3" fill="currentColor"/><path d="M13 14h10M13 18h10M13 22h6" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/></svg><span class="repo-name">dump_script</span><span class="ver repo-version">main</span></a>
+  <nav class="tabs" aria-label="Pages">
+    <a href="index.html" class="current" aria-current="page" data-i18n>Guide</a>
+    <a href="technical.html" data-i18n>Technical</a>
+    <a href="graph.html" data-i18n>Graph</a>
+  </nav>
+  <span class="spacer"></span>
+  <div class="top-actions">
+  <a class="icon-btn repo-link" href="https://github.com/TsukiNi22/dump_script" title="GitHub repository" data-i18n-title aria-label="GitHub repository" data-i18n-aria-label>
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.23 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+  </a>
+  <span class="divider" aria-hidden="true"></span>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-set-lang="en" class="on">EN</button>
+    <button type="button" data-set-lang="fr">FR</button>
+  </div>
+  <button class="theme-switch" type="button" id="themeToggle" role="switch" aria-checked="false" aria-label="Toggle theme" data-i18n-aria-label title="Toggle theme" data-i18n-title>
+    <span class="stars" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="knob" aria-hidden="true">
+      <svg class="sun" viewBox="0 0 24 24" fill="#ffffff"><circle cx="12" cy="12" r="5.2"/><g stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8"/></g></svg>
+      <svg class="moon" viewBox="0 0 24 24"><path d="M15.6 4.2a8 8 0 1 0 4.2 11.6A7 7 0 0 1 15.6 4.2z" fill="#f6c343"/></svg>
+    </span>
+  </button>
+  </div>
+</header>
+<div class="layout">
+<aside class="sidebar" id="sidebar" aria-label="Contents" data-i18n-aria-label>
+  <p data-i18n>Contents</p>
+  <a href="#about"><span data-lang="en">1. About</span><span data-lang="fr">1. Présentation</span></a>
+  <a href="#install"><span data-lang="en">2. Installation</span><span data-lang="fr">2. Installation</span></a>
+  <a href="#start"><span data-lang="en">3. First steps</span><span data-lang="fr">3. Premiers pas</span></a>
+  <a href="#use"><span data-lang="en">4. Usage</span><span data-lang="fr">4. Utilisation</span></a>
+  <a href="#faq"><span data-lang="en">5. FAQ</span><span data-lang="fr">5. Questions fréquentes</span></a>
+</aside>
+
+<main>
+<header>
+  <div class="page-eyebrow" data-i18n>User guide</div>
+  <h1>dump_script</h1>
+  <p class="lead"><span data-lang="en">Set up your Linux computer from one menu.</span><span data-lang="fr">Préparez votre ordinateur Linux depuis un seul menu.</span></p>
+</header>
+
+<!-- 1 -->
+<section id="about">
+  <h2><span data-lang="en">1. About</span><span data-lang="fr">1. Présentation</span></h2>
+  <p class="lead"><span data-lang="en">dump_script sets up a fresh Linux computer for you: your shell, editor, tools, apps and optional USB-key security, chosen from a simple menu.</span><span data-lang="fr">dump_script prépare un ordinateur Linux tout neuf pour vous : shell, éditeur, outils, applications et sécurité par clé USB optionnelle, choisis dans un menu simple.</span></p>
+  <p><span data-lang="en">It works on Fedora, Debian, Ubuntu, Arch and their derivatives. You need an administrator account and an internet connection.</span><span data-lang="fr">Il fonctionne sur Fedora, Debian, Ubuntu, Arch et leurs dérivés. Il faut un compte administrateur et une connexion internet.</span></p>
+  <div class="callout ok"><p><span data-lang="en">At the end, the setups you picked are installed and configured, and the menu tells you which ones succeeded.</span><span data-lang="fr">À la fin, les setups choisis sont installés et configurés, et le menu indique ceux qui ont réussi.</span></p></div>
+</section>
+
+<!-- 2 -->
+<section id="install">
+  <h2><span data-lang="en">2. Installation</span><span data-lang="fr">2. Installation</span></h2>
+  <ol class="steps">
+    <li><strong><span data-lang="en">Download</span><span data-lang="fr">Télécharger</span></strong><span data-lang="en">Get the project with git:</span><span data-lang="fr">Récupérez le projet avec git :</span><pre><code>git clone https://github.com/TsukiNi22/dump_script.git ~/dump_script</code></pre></li>
+    <li><strong><span data-lang="en">Check</span><span data-lang="fr">Vérifier</span></strong><span data-lang="en">The folder <code>~/dump_script</code> exists and contains a <code>Makefile</code>.</span><span data-lang="fr">Le dossier <code>~/dump_script</code> existe et contient un <code>Makefile</code>.</span></li>
+  </ol>
+  <div class="callout warn"><p><span data-lang="en">Run it from your own account with sudo, not from a root session: your personal files are configured for the account that called sudo.</span><span data-lang="fr">Lancez-le depuis votre compte avec sudo, pas depuis une session root : vos fichiers personnels sont configurés pour le compte qui a appelé sudo.</span></p></div>
+</section>
+
+<!-- 3 -->
+<section id="start">
+  <h2><span data-lang="en">3. First steps</span><span data-lang="fr">3. Premiers pas</span></h2>
+  <ol class="steps">
+    <li><strong><span data-lang="en">Start</span><span data-lang="fr">Lancer</span></strong><span data-lang="en">Open a terminal and run:</span><span data-lang="fr">Ouvrez un terminal et lancez :</span><pre><code>cd ~/dump_script
+sudo make</code></pre></li>
+    <li><strong><span data-lang="en">Wait for the update</span><span data-lang="fr">Attendre la mise à jour</span></strong><span data-lang="en">A loading screen updates the system first.</span><span data-lang="fr">Un écran de chargement met d'abord le système à jour.</span></li>
+    <li><strong><span data-lang="en">Pick a setup</span><span data-lang="fr">Choisir un setup</span></strong><span data-lang="en">Move in the list, read the details on the right, press <kbd>Enter</kbd> to run the hovered setup.</span><span data-lang="fr">Déplacez-vous dans la liste, lisez les détails à droite, appuyez sur <kbd>Entrée</kbd> pour lancer le setup survolé.</span></li>
+    <li><strong><span data-lang="en">Answer the questions</span><span data-lang="fr">Répondre aux questions</span></strong><span data-lang="en">A setup may ask something (a choice, a name): the question appears in the list.</span><span data-lang="fr">Un setup peut poser une question (un choix, un nom) : elle apparaît dans la liste.</span></li>
+  </ol>
+</section>
+
+<!-- 4 -->
+<section id="use">
+  <h2><span data-lang="en">4. Usage</span><span data-lang="fr">4. Utilisation</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">I want to…</span><span data-lang="fr">Je veux…</span></th><th><span data-lang="en">I do…</span><span data-lang="fr">Je fais…</span></th></tr></thead>
+    <tbody>
+      <tr><td><span data-lang="en">Get my shell and editor</span><span data-lang="fr">Avoir mon shell et mon éditeur</span></td><td><span data-lang="en">Run <strong>Dotfile</strong></span><span data-lang="fr">Lancer <strong>Dotfile</strong></span></td></tr>
+      <tr><td><span data-lang="en">Install my tools and apps</span><span data-lang="fr">Installer mes outils et applications</span></td><td><span data-lang="en">Run <strong>Package &amp; App</strong></span><span data-lang="fr">Lancer <strong>Package &amp; App</strong></span></td></tr>
+      <tr><td><span data-lang="en">Install Claude Code or Ollama</span><span data-lang="fr">Installer Claude Code ou Ollama</span></td><td><span data-lang="en">Run <strong>AI</strong> and tick what you want</span><span data-lang="fr">Lancer <strong>AI</strong> et cocher ce que je veux</span></td></tr>
+      <tr><td><span data-lang="en">Set up git and clone my repositories</span><span data-lang="fr">Configurer git et cloner mes dépôts</span></td><td><span data-lang="en">Run <strong>Git</strong></span><span data-lang="fr">Lancer <strong>Git</strong></span></td></tr>
+      <tr><td><span data-lang="en">Log in only with my password AND a USB key</span><span data-lang="fr">Me connecter avec mon mot de passe ET une clé USB</span></td><td><span data-lang="en">Choose the key in <strong>Usb Keys</strong>, then run <strong>Pam Usb</strong></span><span data-lang="fr">Choisir la clé dans <strong>Usb Keys</strong>, puis lancer <strong>Pam Usb</strong></span></td></tr>
+      <tr><td><span data-lang="en">Lock the session when I remove the key</span><span data-lang="fr">Verrouiller la session quand je retire la clé</span></td><td><span data-lang="en">Run <strong>Usb Lock &amp; Power Shutdown</strong></span><span data-lang="fr">Lancer <strong>Usb Lock &amp; Power Shutdown</strong></span></td></tr>
+      <tr><td><span data-lang="en">Undo a USB setup</span><span data-lang="fr">Annuler un setup USB</span></td><td><span data-lang="en">Run it again and choose the deactivation</span><span data-lang="fr">Le relancer et choisir la désactivation</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 5 -->
+<section id="faq">
+  <h2><span data-lang="en">5. FAQ</span><span data-lang="fr">5. Questions fréquentes</span></h2>
+  <details class="faq">
+    <summary><span data-lang="en">A package was not installed?</span><span data-lang="fr">Un paquet n'a pas été installé ?</span></summary>
+    <p><span data-lang="en">It is not available on your distribution. It is reported and skipped; the following steps still run.</span><span data-lang="fr">Il n'existe pas sur votre distribution. Il est signalé et ignoré ; les étapes suivantes continuent.</span></p>
+  </details>
+  <details class="faq">
+    <summary><span data-lang="en">The USB setups say “usb key needed”?</span><span data-lang="fr">Les setups USB indiquent « usb key needed » ?</span></summary>
+    <p><span data-lang="en">Choose the key in <strong>Usb Keys</strong> (or when the setup asks), with the key plugged in.</span><span data-lang="fr">Choisissez la clé dans <strong>Usb Keys</strong> (ou quand le setup le demande), clé branchée.</span></p>
+  </details>
+  <details class="faq">
+    <summary><span data-lang="en">Can I run a single setup without the menu?</span><span data-lang="fr">Puis-je lancer un seul setup sans le menu ?</span></summary>
+    <p><span data-lang="en">Yes: <code>sudo bash Linux/&lt;setup&gt;/launch.sh</code>.</span><span data-lang="fr">Oui : <code>sudo bash Linux/&lt;setup&gt;/launch.sh</code>.</span></p>
+  </details>
+  <details class="faq">
+    <summary><span data-lang="en">I lost my zshrc?</span><span data-lang="fr">J'ai perdu mon zshrc ?</span></summary>
+    <p><span data-lang="en">The previous one is saved as <code>~/.zshrc.bak</code>.</span><span data-lang="fr">L'ancien est sauvegardé dans <code>~/.zshrc.bak</code>.</span></p>
+  </details>
+</section>
+
+<nav class="pager" aria-label="Pages">
+  <a class="next" href="technical.html"><span data-i18n>Next</span><b data-i18n>Technical</b></a>
+</nav>
+</main>
+</div>
+<footer class="site"><span data-lang="en"><span class="repo-name">dump_script</span> documentation · generated from the <a class="repo-link" href="https://github.com/TsukiNi22/dump_script">repository</a> (<span class="repo-version">main</span>, <span class="repo-license">MIT</span>)</span><span data-lang="fr">Documentation de <span class="repo-name">dump_script</span> · générée depuis le <a class="repo-link" href="https://github.com/TsukiNi22/dump_script">dépôt</a> (<span class="repo-version">main</span>, <span class="repo-license">MIT</span>)</span></footer>
+<script>
+// French texts of the page (English text -> French text), extend it with the page content
+window.DOC_FR = {
+  "Guide": "Guide",
+  "Technical": "Technique",
+  "Graph": "Graphe",
+  "GitHub repository": "Dépôt GitHub",
+  "Toggle theme": "Changer de thème",
+  "Contents": "Sommaire",
+  "Language": "Langue",
+  "Pages": "Pages",
+  "Copy": "Copier",
+  "Copied": "Copié",
+  "Select & copy": "Sélectionner et copier",
+  "Link to this section": "Lien vers cette section",
+  "Navigation": "Navigation",
+  "Open the navigation": "Ouvrir la navigation",
+  "User guide": "Guide utilisateur",
+  "Developer guide": "Guide développeur",
+  "Technical documentation": "Documentation technique",
+  "Previous": "Précédent",
+  "Next": "Suivant"
+};
+</script>
+<script>
+// Language (English by default, French on demand): [data-i18n] elements and [data-i18n-<attr>] attributes are
+// translated with window.DOC_FR (English text -> French text), [data-lang] blocks are shown for their language only.
+(function () {
+  var root = document.documentElement;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-lang';
+  var FR = window.DOC_FR || {};
+  var listeners = [];
+  function tr(s) { return root.lang === 'fr' && Object.prototype.hasOwnProperty.call(FR, s) ? FR[s] : s; }
+  function apply() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      if (el.dataset.i18nEn === undefined) el.dataset.i18nEn = el.innerHTML.trim();
+      el.innerHTML = tr(el.dataset.i18nEn);
+    });
+    ['aria-label', 'title', 'placeholder'].forEach(function (attr) {
+      document.querySelectorAll('[data-i18n-' + attr + ']').forEach(function (el) {
+        var store = 'i18nEn' + attr.replace(/-(\w)/g, function (m, c) { return c.toUpperCase(); });
+        if (el.dataset[store] === undefined) el.dataset[store] = el.getAttribute(attr) || '';
+        el.setAttribute(attr, tr(el.dataset[store]));
+      });
+    });
+    document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.setLang === root.lang);
+      b.setAttribute('aria-pressed', b.dataset.setLang === root.lang ? 'true' : 'false');
+    });
+  }
+  function set(lang) {
+    root.lang = lang === 'fr' ? 'fr' : 'en';
+    try { localStorage.setItem(key, root.lang); } catch (e) { /* storage unavailable */ }
+    apply();
+    listeners.forEach(function (f) { f(root.lang); });
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(key); } catch (e) { /* storage unavailable */ }
+  // Choice carried by a link of the site (?lang=): pages opened from file:// don't share their storage
+  var askedLang = new URLSearchParams(location.search).get('lang');
+  if (askedLang === 'en' || askedLang === 'fr') { saved = askedLang; try { localStorage.setItem(key, askedLang); } catch (e) { /* storage unavailable */ } }
+  root.lang = saved === 'fr' ? 'fr' : 'en';
+  window.docI18n = { tr: tr, set: set, onChange: function (f) { listeners.push(f); }, lang: function () { return root.lang; } };
+  document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+    b.addEventListener('click', function () { set(b.dataset.setLang); });
+  });
+  apply();
+})();
+</script>
+<script>
+// Project data from the linked GitHub repository (<html data-repo="owner/repo">): name, latest version, license and
+// URL are fetched (cached 1 h) and replace the written values in .repo-name / .repo-version / .repo-license /
+// .repo-link and in the page title. Offline, private repository or API limit: the written values stay.
+(function () {
+  var root = document.documentElement, repo = root.getAttribute('data-repo') || '';
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-repo', TTL = 3600 * 1000;
+  function apply(info) {
+    if (!info) return;
+    var oldName = (document.querySelector('.repo-name') || {}).textContent;
+    if (info.name) document.querySelectorAll('.repo-name').forEach(function (e) { e.textContent = info.name; });
+    if (info.version) document.querySelectorAll('.repo-version').forEach(function (e) { e.textContent = info.version; });
+    if (info.license) document.querySelectorAll('.repo-license').forEach(function (e) { e.textContent = info.license; });
+    if (info.url) document.querySelectorAll('a.repo-link').forEach(function (e) { e.href = info.url; });
+    if (info.name && oldName && document.title.indexOf(oldName) === 0) document.title = info.name + document.title.slice(oldName.length);
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* storage unavailable */ }
+  if (cached && cached.repo === repo) apply(cached);
+  // A language change rewrites the translated texts from their original: apply the fetched data again
+  if (window.docI18n) window.docI18n.onChange(function () { var c = null; try { c = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* storage unavailable */ } apply(window.docRepoInfo || c); });
+  if (cached && cached.repo === repo && Date.now() - cached.time < TTL) return;
+  var api = 'https://api.github.com/repos/' + repo;
+  var get = function (u) { return fetch(u, { headers: { Accept: 'application/vnd.github+json' } }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); };
+  get(api).then(function (r) {
+    var info = { repo: repo, time: Date.now(), name: r.name, url: r.html_url, license: r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION' ? r.license.spdx_id : '' };
+    return get(api + '/releases/latest').then(function (rel) { info.version = rel.tag_name; return info; })
+      .catch(function () { return get(api + '/tags?per_page=1').then(function (tags) { if (tags[0]) info.version = tags[0].name; return info; }); })
+      .catch(function () { return info; });
+  }).then(function (info) {
+    window.docRepoInfo = info;
+    apply(info);
+    try { localStorage.setItem(key, JSON.stringify(info)); } catch (e) { /* storage unavailable */ }
+  }).catch(function () { /* keep the written values */ });
+})();
+</script>
+<script>
+(function () {
+  var root = document.documentElement;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-theme';
+  var btn = document.getElementById('themeToggle');
+  try { var saved = localStorage.getItem(key); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  var askedTheme = new URLSearchParams(location.search).get('theme'); // carried by a link of the site
+  if (askedTheme === 'dark' || askedTheme === 'light') { root.setAttribute('data-theme', askedTheme); try { localStorage.setItem(key, askedTheme); } catch (e) { /* storage unavailable */ } }
+  function isDark() {
+    return root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  btn.setAttribute('aria-checked', isDark() ? 'true' : 'false');
+  btn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    btn.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false');
+    try { localStorage.setItem(key, next); } catch (e) {}
+  });
+
+  // Highlight the section visible in the summary
+  var links = document.querySelectorAll('.sidebar a[href^="#"]');
+  if (!('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id); });
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('main section[id]').forEach(function (s) { observer.observe(s); });
+})();
+
+// Hide the tabs of the pages that don't exist, and the whole bar when a single page remains
+// (online: HEAD request; file://: the page is loaded as a hidden script, a missing file fails to load)
+(function () {
+  var nav = document.querySelector('nav.tabs');
+  if (!nav) return;
+  function done(a, ok) {
+    if (!ok) a.remove();
+    if (nav.querySelectorAll('a').length < 2) nav.hidden = true;
+  }
+  nav.querySelectorAll('a:not(.current)').forEach(function (a) {
+    if (/^https?:$/.test(location.protocol)) {
+      fetch(a.href, { method: 'HEAD' }).then(function (r) { done(a, r.ok); }).catch(function () {});
+      return;
+    }
+    var s = document.createElement('script');
+    var mute = function (e) { if (e.filename === s.src) { e.preventDefault(); e.stopImmediatePropagation(); } }; // an HTML page is not JS
+    window.addEventListener('error', mute, true);
+    s.src = a.href;
+    s.onload = function () { window.removeEventListener('error', mute, true); s.remove(); done(a, true); };
+    s.onerror = function () { window.removeEventListener('error', mute, true); s.remove(); done(a, false); };
+    document.head.appendChild(s);
+  });
+  if (nav.querySelectorAll('a').length < 2) nav.hidden = true;
+})();
+
+// Sidebar (mobile), copy buttons, heading anchors, content tabs
+(function () {
+  var tr = function (s) { return window.docI18n ? window.docI18n.tr(s) : s; };
+  var menu = document.getElementById('menuBtn'), side = document.getElementById('sidebar');
+  if (menu && side) {
+    menu.addEventListener('click', function () { side.classList.toggle('open'); });
+    document.addEventListener('click', function (e) { if (!side.contains(e.target) && !menu.contains(e.target)) side.classList.remove('open'); });
+  }
+  document.querySelectorAll('main pre').forEach(function (pre) {
+    if (pre.dataset.nocopy !== undefined) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = tr('Copy');
+    b.addEventListener('click', function () {
+      var code = pre.querySelector('code') || pre;
+      var done = function () { b.textContent = tr('Copied'); setTimeout(function () { b.textContent = tr('Copy'); }, 1400); };
+      if (navigator.clipboard) navigator.clipboard.writeText(code.innerText).then(done, function () { b.textContent = tr('Select & copy'); });
+      else b.textContent = tr('Select & copy');
+    });
+    pre.appendChild(b);
+  });
+  document.querySelectorAll('main h2[id], main h3[id], main section[id] > h2').forEach(function (h) {
+    var id = h.id || h.parentElement.id;
+    if (!id || h.querySelector('.anchor')) return;
+    var a = document.createElement('a');
+    a.className = 'anchor'; a.href = '#' + id; a.textContent = '#';
+    a.setAttribute('aria-label', tr('Link to this section'));
+    h.appendChild(a);
+  });
+  document.querySelectorAll('.ctabs').forEach(function (bar) {
+    var group = bar.dataset.tabs;
+    var buttons = bar.querySelectorAll('button');
+    var panels = document.querySelectorAll('.ctab-panel[data-tabs="' + group + '"]');
+    function show(name) {
+      buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+      panels.forEach(function (p) { p.classList.toggle('active', p.dataset.tab === name); });
+    }
+    buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+    if (buttons.length) show(buttons[0].dataset.tab);
+  });
+  if (window.docI18n) window.docI18n.onChange(function () {
+    document.querySelectorAll('main pre .copy').forEach(function (b) { b.textContent = tr('Copy'); });
+    document.querySelectorAll('.anchor').forEach(function (a) { a.setAttribute('aria-label', tr('Link to this section')); });
+  });
+})();
+</script>
+<script>
+// Links between the pages of the site carry the language, theme and level (?lang=fr&theme=dark&level=technical):
+// the choice applies to every page, also from file:// where each page has its own storage
+(function () {
+  var root = document.documentElement;
+  function carry(e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank') return;
+    var href = a.getAttribute('href');
+    if (!/^[^:?#\/]+\.html(#.*)?$/.test(href) && !/^\.\/[^:?#\/]+\.html(#.*)?$/.test(href)) return; // pages of the same folder only
+    var u = new URL(a.href);
+    u.searchParams.set('lang', root.lang || 'en');
+    if (root.getAttribute('data-theme')) u.searchParams.set('theme', root.getAttribute('data-theme'));
+    if (root.getAttribute('data-level')) u.searchParams.set('level', root.getAttribute('data-level'));
+    a.href = u.href;
+  }
+  document.addEventListener('click', carry, true);
+  document.addEventListener('auxclick', carry, true);
+})();
+</script>
+</body>
+</html>

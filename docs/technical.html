@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en" data-page="technical" data-storage-key="dump-script" data-repo="TsukiNi22/dump_script">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dump_script · Technical documentation</title>
+<style>
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1d1f23;
+  --muted: #5d636e;
+  --border: #dfe1e5;
+  --accent: #2f5bd3;
+  --accent-soft: #e6ecfb;
+  --warn: #a8540a;
+  --warn-soft: #fbefe3;
+  --ok: #1f7a4a;
+  --ok-soft: #e3f4ea;
+  --code-bg: #f1f2f4;
+  --node: #ffffff;
+  --node-alt: #eef1f8;
+  --line: #8a909b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171b;
+    --surface: #1d2025;
+    --text: #e6e7ea;
+    --muted: #9aa0ab;
+    --border: #30343b;
+    --accent: #7d9cf0;
+    --accent-soft: #232c45;
+    --warn: #f0a868;
+    --warn-soft: #3a2a1b;
+    --ok: #6fcf97;
+    --ok-soft: #1b3326;
+    --code-bg: #24272d;
+    --node: #23262c;
+    --node-alt: #283043;
+    --line: #747a85;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171b;
+  --surface: #1d2025;
+  --text: #e6e7ea;
+  --muted: #9aa0ab;
+  --border: #30343b;
+  --accent: #7d9cf0;
+  --accent-soft: #232c45;
+  --warn: #f0a868;
+  --warn-soft: #3a2a1b;
+  --ok: #6fcf97;
+  --ok-soft: #1b3326;
+  --code-bg: #24272d;
+  --node: #23262c;
+  --node-alt: #283043;
+  --line: #747a85;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 40px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+main { min-width: 0; }
+header h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; }
+header p { color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  scroll-margin-top: 72px;
+}
+h2 { font-size: 22px; margin: 0 0 16px; }
+h3 { font-size: 17px; margin: 28px 0 10px; }
+p, li { max-width: 75ch; }
+a { color: var(--accent); }
+code {
+  font: 0.9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+pre {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+pre code { background: none; padding: 0; }
+.table-wrap { overflow-x: auto; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.callout {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+}
+.callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+.callout.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+figure { margin: 20px 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+svg .box { fill: var(--node); stroke: var(--line); stroke-width: 1.2; }
+svg .box-alt { fill: var(--node-alt); stroke: var(--accent); stroke-width: 1.2; }
+svg .group { fill: none; stroke: var(--border); stroke-width: 1.5; stroke-dasharray: 5 4; }
+svg .lbl { fill: var(--text); font: 13px system-ui, sans-serif; }
+svg .small { fill: var(--muted); font: 11.5px system-ui, sans-serif; }
+svg .title { fill: var(--muted); font: 600 12px system-ui, sans-serif; letter-spacing: .05em; }
+svg .edge { stroke: var(--line); stroke-width: 1.4; fill: none; }
+svg .edge-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+svg .dash { stroke-dasharray: 4 4; }
+svg .arrow { fill: var(--line); }
+svg .arrow-accent { fill: var(--accent); }
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 18px;
+  height: 56px; padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tabs { display: flex; gap: 4px; margin-left: 8px; overflow-x: auto; }
+.tabs[hidden] { display: none; }
+.tabs a {
+  padding: 6px 12px; border-radius: 6px;
+  color: var(--muted); text-decoration: none; font-size: 14px; white-space: nowrap;
+}
+.tabs a:hover { color: var(--text); background: var(--code-bg); }
+.tabs a.current { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.topbar .spacer { flex: 1; }
+.icon-btn {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; padding: 0;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 50%;
+  cursor: pointer; text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon-btn svg { width: 18px; height: 18px; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; padding: 24px 16px 60px; gap: 16px; }
+  .topbar { gap: 10px; padding: 0 12px; }
+  .brand .ver { display: none; }
+  .menu-btn { display: grid; }
+  .sidebar { position: fixed; top: 56px; left: 0; bottom: 0; z-index: 25; width: min(300px, 85vw); max-height: none; padding: 16px 10px; background: var(--bg); border-right: 1px solid var(--border); transform: translateX(-105%); transition: transform .2s; }
+  .sidebar.open { transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, .25); }
+  section { padding: 20px 16px; }
+  header h1 { font-size: 27px; }
+}
+/* Language switch (EN / FR pill) */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  border: 1.5px solid var(--border); border-radius: 999px; background: var(--surface);
+}
+.lang-switch button {
+  border: 0; background: none; color: var(--text); cursor: pointer;
+  font: 600 12.5px system-ui, sans-serif; letter-spacing: .03em;
+  padding: 4px 11px; border-radius: 999px; transition: background .2s, color .2s;
+}
+.lang-switch button.on { background: var(--accent); color: var(--surface); }
+.lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Theme switch: blue track + sun (light), black track + moon and stars (dark) */
+.theme-switch {
+  position: relative; width: 58px; height: 30px; flex: none; padding: 0; border: 0; border-radius: 999px;
+  background: #2196f3; cursor: pointer; transition: background .3s;
+}
+.theme-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-switch .knob {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; transition: transform .3s, background .3s;
+}
+.theme-switch .knob svg { width: 22px; height: 22px; }
+.theme-switch .sun { display: block; }
+.theme-switch .moon, .theme-switch .stars { display: none; }
+.theme-switch .stars { position: absolute; inset: 0; }
+.theme-switch .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
+.theme-switch .stars i:nth-child(1) { left: 9px; top: 9px; }
+.theme-switch .stars i:nth-child(2) { left: 16px; top: 18px; width: 1.5px; height: 1.5px; }
+.theme-switch .stars i:nth-child(3) { left: 21px; top: 8px; width: 1.5px; height: 1.5px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-switch { background: #0b0b0d; box-shadow: inset 0 0 0 1px #2a2c31; }
+  :root:not([data-theme="light"]) .theme-switch .knob { transform: translateX(28px); background: #ffffff; }
+  :root:not([data-theme="light"]) .theme-switch .sun { display: none; }
+  :root:not([data-theme="light"]) .theme-switch .moon, :root:not([data-theme="light"]) .theme-switch .stars { display: block; }
+}
+:root[data-theme="dark"] .theme-switch { background: #0b0b0d; box-shadow: inset 0 0 0 1px #2a2c31; }
+:root[data-theme="dark"] .theme-switch .knob { transform: translateX(28px); background: #ffffff; }
+:root[data-theme="dark"] .theme-switch .sun { display: none; }
+:root[data-theme="dark"] .theme-switch .moon, :root[data-theme="dark"] .theme-switch .stars { display: block; }
+/* Bilingual content: only the active language is shown */
+:root[lang="en"] [data-lang="fr"], :root[lang="fr"] [data-lang="en"] { display: none !important; }
+/* ---------- Header: logo + version badge, mobile menu ---------- */
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; white-space: nowrap; }
+.brand .logo { width: 26px; height: 26px; flex: none; color: var(--accent); object-fit: contain; }
+.brand .ver { font-size: 12px; color: var(--muted); font-weight: 500; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; }
+.brand .ver:empty { display: none; } /* no version: the name alone */
+.menu-btn { display: none; }
+/* ---------- Sidebar tree (pages > sections of the current page) ---------- */
+.sidebar { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 100px); overflow-y: auto; font-size: 14px; }
+@media (max-width: 860px) { .sidebar { position: fixed; top: 56px; max-height: none; } } /* off-canvas menu: out of the flow */
+.sidebar p { margin: 0 0 8px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.sidebar a { display: block; padding: 5px 10px; color: var(--muted); text-decoration: none; border-left: 2px solid var(--border); }
+.sidebar a:hover, .sidebar a.active { color: var(--accent); border-left-color: var(--accent); }
+/* ---------- Page header: eyebrow + title + lead ---------- */
+.page-eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-bottom: 6px; }
+header .lead { font-size: 17px; color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+/* ---------- Heading anchors ---------- */
+h2 .anchor, h3 .anchor { margin-left: 8px; color: var(--muted); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity .15s; }
+h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
+/* ---------- Code blocks: title bar + copy button ---------- */
+pre { position: relative; }
+pre[data-title]::before {
+  content: attr(data-title); display: block; margin: -14px -16px 12px; padding: 6px 16px;
+  font: 12px system-ui, sans-serif; color: var(--muted); border-bottom: 1px solid var(--border);
+  background: var(--surface); border-radius: 8px 8px 0 0;
+}
+pre .copy {
+  position: absolute; top: 8px; right: 8px; font: 12px system-ui, sans-serif; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  border-radius: 6px; padding: 3px 8px; opacity: 0; transition: opacity .15s;
+}
+pre[data-title] .copy { top: 5px; }
+pre:hover .copy, pre .copy:focus { opacity: 1; }
+pre .copy:hover { color: var(--text); }
+/* ---------- Content tabs ---------- */
+.ctabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin: 12px 0; }
+.ctabs button { background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 12px; cursor: pointer; color: var(--muted); font: 500 14px system-ui, sans-serif; }
+.ctabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.ctab-panel { display: none; }
+.ctab-panel.active { display: block; }
+/* ---------- Previous / next page ---------- */
+.pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 32px; }
+.pager a { flex: 1; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-decoration: none; }
+.pager a:hover { border-color: var(--accent); }
+.pager a span { display: block; font-size: 12px; color: var(--muted); }
+.pager a.next { text-align: right; }
+.pager:empty { display: none; }
+/* ---------- Footer ---------- */
+footer.site { max-width: 1180px; margin: 0 auto; padding: 22px 24px 30px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+footer.site a { color: var(--accent); }
+@media (max-width: 860px) {
+  .menu-btn { display: grid; }
+  footer.site { padding: 20px 16px; }
+  .topbar .tabs { display: none; } /* the sidebar (menu) gives the navigation on mobile */
+}
+.topbar .icon-btn, .topbar .lang-switch, .topbar .theme-switch { flex: none; }
+.topbar .tabs { min-width: 0; }
+@media (max-width: 860px) {
+  .topbar .spacer { display: none; }
+  .topbar .tabs { flex: 1 1 auto; }
+  .topbar .icon-btn { width: 32px; height: 32px; }
+}
+@media (max-width: 480px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .topbar a.icon-btn[href] { display: none; } /* GitHub link: also in the footer / graph panel */
+  .lang-switch button { padding: 4px 9px; }
+}
+@media (min-width: 1340px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 880px) minmax(0, 1fr); max-width: none; }
+  .layout > .sidebar { grid-column: 1; justify-self: end; width: 230px; }
+  .layout > main { grid-column: 2; }
+  footer.site { max-width: 880px; }
+}
+/* ---------- No scroll beyond the page ---------- */
+html, body { overscroll-behavior: none; }
+/* ---------- Top right actions: same height, grouped, divider ---------- */
+.top-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.top-actions .divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+.top-actions .icon-btn { width: 34px; height: 34px; }
+.top-actions .lang-switch { height: 34px; padding: 3px; background: var(--code-bg); border: 1px solid var(--border); }
+.top-actions .lang-switch button { height: 26px; padding: 0 10px; font-size: 12px; }
+.top-actions .theme-switch { width: 56px; height: 30px; border: 1px solid transparent; }
+.top-actions .theme-switch .knob { top: 2px; left: 2px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .top-actions .theme-switch { border-color: var(--border); box-shadow: none; }
+  :root:not([data-theme="light"]) .top-actions .theme-switch .knob { transform: translateX(26px); }
+}
+:root[data-theme="dark"] .top-actions .theme-switch { border-color: var(--border); box-shadow: none; }
+:root[data-theme="dark"] .top-actions .theme-switch .knob { transform: translateX(26px); }
+@media (max-width: 480px) { .top-actions .divider { display: none; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn menu-btn" type="button" id="menuBtn" aria-label="Open the navigation" data-i18n-aria-label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><!-- default logo: replace with the project logo (inline SVG, currentColor) --><rect x="4" y="4" width="18" height="22" rx="3" fill="currentColor" opacity=".35"/><rect x="9" y="7" width="18" height="22" rx="3" fill="currentColor"/><path d="M13 14h10M13 18h10M13 22h6" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/></svg><span class="repo-name">dump_script</span><span class="ver repo-version">main</span></a>
+  <nav class="tabs" aria-label="Pages">
+    <a href="index.html" data-i18n>Guide</a>
+    <a href="technical.html" class="current" aria-current="page" data-i18n>Technical</a>
+    <a href="graph.html" data-i18n>Graph</a>
+  </nav>
+  <span class="spacer"></span>
+  <div class="top-actions">
+  <a class="icon-btn repo-link" href="https://github.com/TsukiNi22/dump_script" title="GitHub repository" data-i18n-title aria-label="GitHub repository" data-i18n-aria-label>
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.23 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+  </a>
+  <span class="divider" aria-hidden="true"></span>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-set-lang="en" class="on">EN</button>
+    <button type="button" data-set-lang="fr">FR</button>
+  </div>
+  <button class="theme-switch" type="button" id="themeToggle" role="switch" aria-checked="false" aria-label="Toggle theme" data-i18n-aria-label title="Toggle theme" data-i18n-title>
+    <span class="stars" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="knob" aria-hidden="true">
+      <svg class="sun" viewBox="0 0 24 24" fill="#ffffff"><circle cx="12" cy="12" r="5.2"/><g stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8"/></g></svg>
+      <svg class="moon" viewBox="0 0 24 24"><path d="M15.6 4.2a8 8 0 1 0 4.2 11.6A7 7 0 0 1 15.6 4.2z" fill="#f6c343"/></svg>
+    </span>
+  </button>
+  </div>
+</header>
+<div class="layout">
+<aside class="sidebar" id="sidebar" aria-label="Contents" data-i18n-aria-label>
+  <p data-i18n>Contents</p>
+  <a href="#overview"><span data-lang="en">1. Overview</span><span data-lang="fr">1. Vue d'ensemble</span></a>
+  <a href="#flow"><span data-lang="en">2. Execution flow</span><span data-lang="fr">2. Déroulement</span></a>
+  <a href="#utils"><span data-lang="en">3. Shared library (utils.sh)</span><span data-lang="fr">3. Bibliothèque commune (utils.sh)</span></a>
+  <a href="#setups"><span data-lang="en">4. The setups</span><span data-lang="fr">4. Les setups</span></a>
+  <a href="#usb"><span data-lang="en">5. USB key setups</span><span data-lang="fr">5. Setups de la clé USB</span></a>
+  <a href="#ai"><span data-lang="en">6. AI and ai-utils</span><span data-lang="fr">6. IA et ai-utils</span></a>
+  <a href="#distros"><span data-lang="en">7. Distributions</span><span data-lang="fr">7. Distributions</span></a>
+</aside>
+
+<main>
+<header>
+  <div class="page-eyebrow" data-i18n>Technical documentation</div>
+  <h1>dump_script</h1>
+  <p class="lead"><span data-lang="en">Menu-driven setup of a Linux machine, with one standalone script per setup.</span><span data-lang="fr">Installation d'une machine Linux pilotée par un menu, avec un script autonome par setup.</span></p>
+</header>
+
+<!-- 1 -->
+<section id="overview">
+  <h2><span data-lang="en">1. Overview</span><span data-lang="fr">1. Vue d'ensemble</span></h2>
+  <p><span data-lang="en"><code>dump_script</code> installs and configures a Linux machine from one menu: each entry is a <em>setup</em>, a standalone <code>launch.sh</code> in its own folder of <code>Linux/</code>. <code>Linux/dump.sh</code> is the front end (loading screen, fzf menu, background runs) and the setups share the helpers of <code>Linux/utils.sh</code>.</span><span data-lang="fr"><code>dump_script</code> installe et configure une machine Linux depuis un seul menu : chaque entrée est un <em>setup</em>, un <code>launch.sh</code> autonome dans son dossier de <code>Linux/</code>. <code>Linux/dump.sh</code> est le front (écran de chargement, menu fzf, exécutions en arrière-plan) et les setups partagent les fonctions de <code>Linux/utils.sh</code>.</span></p>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">File / folder</span><span data-lang="fr">Fichier / dossier</span></th><th><span data-lang="en">Role</span><span data-lang="fr">Rôle</span></th></tr></thead>
+    <tbody>
+      <tr><td><code>Makefile</code></td><td><span data-lang="en"><code>make</code> runs <code>Linux/Makefile</code>, which runs <code>bash dump.sh</code></span><span data-lang="fr"><code>make</code> lance <code>Linux/Makefile</code>, qui lance <code>bash dump.sh</code></span></td></tr>
+      <tr><td><code>Linux/dump.sh</code></td><td><span data-lang="en">Loading screen, menu, task runner, USB key selection</span><span data-lang="fr">Écran de chargement, menu, lanceur de tâches, choix des clés USB</span></td></tr>
+      <tr><td><code>Linux/utils.sh</code></td><td><span data-lang="en">Shared helpers: distribution detection, packages, prompts, logging</span><span data-lang="fr">Fonctions communes : détection de la distribution, paquets, questions, journal</span></td></tr>
+      <tr><td><code>Linux/describe.sh</code></td><td><span data-lang="en">Details of the hovered menu entry (fzf preview)</span><span data-lang="fr">Détails de l'entrée survolée du menu (aperçu fzf)</span></td></tr>
+      <tr><td><code>Linux/&lt;setup&gt;/launch.sh</code></td><td><span data-lang="en">One setup, also runnable alone</span><span data-lang="fr">Un setup, aussi lançable seul</span></td></tr>
+      <tr><td><code>docs/img</code></td><td><span data-lang="en">Screenshots of the README</span><span data-lang="fr">Captures du README</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><p><span data-lang="en">The script must run with sudo from the user account: the config files belong to <code>$SUDO_USER</code>.</span><span data-lang="fr">Le script doit tourner avec sudo depuis le compte utilisateur : les fichiers de config appartiennent à <code>$SUDO_USER</code>.</span></p></div>
+</section>
+
+<!-- 2 -->
+<section id="flow">
+  <h2><span data-lang="en">2. Execution flow</span><span data-lang="fr">2. Déroulement</span></h2>
+  <p><span data-lang="en"><code>sudo make</code> starts the loading screen, which runs the system update with a fixed title and the logs below. Then everything runs in one fzf window: a setup runs in the background, its output is shown live in the preview, and its questions are asked inside the list of the window.</span><span data-lang="fr"><code>sudo make</code> lance l'écran de chargement, qui exécute la mise à jour du système avec un titre fixe et les logs dessous. Ensuite tout tourne dans une fenêtre fzf : un setup s'exécute en arrière-plan, sa sortie s'affiche en direct dans l'aperçu, et ses questions sont posées dans la liste de la fenêtre.</span></p>
+  <figure>
+    <svg viewBox="0 0 760 130" role="img" aria-label="make to dump.sh to launch.sh">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect class="box" x="20" y="35" width="150" height="60" rx="8"/><text class="lbl" x="95" y="70" text-anchor="middle">sudo make</text>
+      <rect class="box" x="220" y="35" width="150" height="60" rx="8"/><text class="lbl" x="295" y="70" text-anchor="middle">dump.sh</text>
+      <rect class="box-alt" x="420" y="35" width="150" height="60" rx="8"/><text class="lbl" x="495" y="70" text-anchor="middle">fzf menu</text>
+      <rect class="box-alt" x="620" y="35" width="120" height="60" rx="8"/><text class="lbl" x="680" y="70" text-anchor="middle">launch.sh</text>
+      <path class="edge" d="M170 65H216" marker-end="url(#arr)"/>
+      <path class="edge" d="M370 65H416" marker-end="url(#arr)"/>
+      <path class="edge" d="M570 65H616" marker-end="url(#arr)"/>
+    </svg>
+    <figcaption><span data-lang="en">Figure 1: from the command to a setup.</span><span data-lang="fr">Figure 1 : de la commande à un setup.</span></figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">Key</span><span data-lang="fr">Touche</span></th><th><span data-lang="en">Action</span><span data-lang="fr">Action</span></th></tr></thead>
+    <tbody>
+      <tr><td><kbd>Enter</kbd></td><td><span data-lang="en">Run the hovered setup</span><span data-lang="fr">Lancer le setup survolé</span></td></tr>
+      <tr><td><kbd>Esc</kbd></td><td><span data-lang="en">Leave the output / the menu</span><span data-lang="fr">Quitter la sortie / le menu</span></td></tr>
+      <tr><td><kbd>Ctrl</kbd> + <kbd>L</kbd></td><td><span data-lang="en">Show the whole output of the last run</span><span data-lang="fr">Afficher toute la sortie du dernier lancement</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><span data-lang="en">Every setup can also be run alone: <code>sudo bash Linux/&lt;setup&gt;/launch.sh</code> (gum prompts, fzf without gum).</span><span data-lang="fr">Chaque setup peut aussi être lancé seul : <code>sudo bash Linux/&lt;setup&gt;/launch.sh</code> (questions gum, fzf sans gum).</span></p></div>
+</section>
+
+<!-- 3 -->
+<section id="utils">
+  <h2><span data-lang="en">3. Shared library (utils.sh)</span><span data-lang="fr">3. Bibliothèque commune (utils.sh)</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">Function</span><span data-lang="fr">Fonction</span></th><th><span data-lang="en">Role</span><span data-lang="fr">Rôle</span></th></tr></thead>
+    <tbody>
+      <tr><td><code>os_family</code></td><td><span data-lang="en">fedora-like, debian-like or arch-like, from ID / ID_LIKE of /etc/os-release</span><span data-lang="fr">fedora-like, debian-like ou arch-like, d'après ID / ID_LIKE de /etc/os-release</span></td></tr>
+      <tr><td><code>pkg_name / pkg_available / pkg_install / install_packages</code></td><td><span data-lang="en">Package names translated per family; a missing package is reported and skipped</span><span data-lang="fr">Noms de paquets traduits par famille ; un paquet absent est signalé et ignoré</span></td></tr>
+      <tr><td><code>setup_charm_repo</code></td><td><span data-lang="en">Charm repository for gum</span><span data-lang="fr">Dépôt Charm pour gum</span></td></tr>
+      <tr><td><code>ask_choose / ask_input / ask_write / menu_ask</code></td><td><span data-lang="en">Questions: in the menu window when running in it, gum otherwise, fzf as fallback</span><span data-lang="fr">Questions : dans la fenêtre du menu quand il tourne, gum sinon, fzf en secours</span></td></tr>
+      <tr><td><code>run_step</code></td><td><span data-lang="en">Runs one step and reports ok / failed; the next steps still run</span><span data-lang="fr">Lance une étape et indique ok / échec ; les suivantes s'exécutent quand même</span></td></tr>
+      <tr><td><code>run_as_user / install_root_file</code></td><td><span data-lang="en">Run as $SUDO_USER, or install a file as root</span><span data-lang="fr">Exécution en $SUDO_USER, ou installation d'un fichier en root</span></td></tr>
+      <tr><td><code>ai_utils_setup</code></td><td><span data-lang="en">Runs the setup.sh of the ai-utils repository (local clone, else downloaded)</span><span data-lang="fr">Lance le setup.sh du dépôt ai-utils (clone local, sinon téléchargé)</span></td></tr>
+      <tr><td><code>usb_is_plugged</code></td><td><span data-lang="en">Checks that the chosen USB key is plugged</span><span data-lang="fr">Vérifie que la clé USB choisie est branchée</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 4 -->
+<section id="setups">
+  <h2><span data-lang="en">4. The setups</span><span data-lang="fr">4. Les setups</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">Setup</span><span data-lang="fr">Setup</span></th><th><span data-lang="en">Folder</span><span data-lang="fr">Dossier</span></th><th><span data-lang="en">What it does</span><span data-lang="fr">Ce qu'il fait</span></th></tr></thead>
+    <tbody>
+      <tr><td>Dotfile</td><td><code>dotfile/</code></td><td><span data-lang="en">Oh-My-Zsh, zshrc (with the dump alias), Neovim (lazy.nvim, rose-pine, treesitter, nvim-cmp, headers), Fastfetch, Tmux, global git ignore</span><span data-lang="fr">Oh-My-Zsh, zshrc (avec l'alias dump), Neovim (lazy.nvim, rose-pine, treesitter, nvim-cmp, en-têtes), Fastfetch, Tmux, ignore git global</span></td></tr>
+      <tr><td>Package &amp; App</td><td><code>package_app/</code></td><td><span data-lang="en">RPM Fusion, Flathub, dev tools, docker, pentest tools, vscode, telegram, qbittorrent, vesktop, sober</span><span data-lang="fr">RPM Fusion, Flathub, outils de dev, docker, outils de pentest, vscode, telegram, qbittorrent, vesktop, sober</span></td></tr>
+      <tr><td>Custom Package &amp; Binary</td><td><code>custom_package/</code></td><td><span data-lang="en">libutils (rpm / deb mirror, or built from sources) and xstyle (built from ai-utils)</span><span data-lang="fr">libutils (miroir rpm / deb, ou compilé depuis les sources) et xstyle (compilé depuis ai-utils)</span></td></tr>
+      <tr><td>AI</td><td><code>ai/</code></td><td><span data-lang="en">Claude Code, Ollama, the skills and their context</span><span data-lang="fr">Claude Code, Ollama, les skills et leur contexte</span></td></tr>
+      <tr><td>Git</td><td><code>git/</code></td><td><span data-lang="en">Git user, delivery folders, ed25519 SSH key with a post-quantum key exchange, clone of chosen repositories</span><span data-lang="fr">Utilisateur git, dossiers de delivery, clé SSH ed25519 avec échange de clés post-quantique, clone des dépôts choisis</span></td></tr>
+      <tr><td>Grub &amp; Plymouth</td><td><code>grub_plymouth/</code></td><td><span data-lang="en">Grub theme from a repository, Plymouth theme loader_2</span><span data-lang="fr">Thème Grub depuis un dépôt, thème Plymouth loader_2</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 5 -->
+<section id="usb">
+  <h2><span data-lang="en">5. USB key setups</span><span data-lang="fr">5. Setups de la clé USB</span></h2>
+  <p><span data-lang="en">Three setups depend on a main USB key (vendor-id / device-id, chosen from lsusb or typed). They can be deactivated at any time, even without the key plugged.</span><span data-lang="fr">Trois setups dépendent d'une clé USB principale (vendor-id / device-id, choisie dans lsusb ou saisie). Ils peuvent être désactivés à tout moment, même sans la clé branchée.</span></p>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">Setup</span><span data-lang="fr">Setup</span></th><th><span data-lang="en">Mechanism</span><span data-lang="fr">Mécanisme</span></th></tr></thead>
+    <tbody>
+      <tr><td>Pam Usb</td><td><span data-lang="en">Builds pam_usb, writes <code>/etc/security/pam_usb.conf</code>, requires password AND key in the auth stack (marked block in system-auth, authselect on fedora, pam-auth-update profile on debian)</span><span data-lang="fr">Compile pam_usb, écrit <code>/etc/security/pam_usb.conf</code>, exige mot de passe ET clé dans la pile d'authentification (bloc marqué dans system-auth, authselect sur fedora, profil pam-auth-update sur debian)</span></td></tr>
+      <tr><td>Usb Lock &amp; Power Shutdown</td><td><span data-lang="en">udev rules <code>80-usb-lock.rules</code> (key removed: lock + suspend) and <code>80-power-shutdown.rules</code> (charger unplugged: power off), run through <code>usb-lock_power-shutdown.sh</code>; an optional cancel key disables both</span><span data-lang="fr">Règles udev <code>80-usb-lock.rules</code> (clé retirée : verrouillage + veille) et <code>80-power-shutdown.rules</code> (chargeur débranché : extinction), via <code>usb-lock_power-shutdown.sh</code> ; une clé d'annulation optionnelle désactive les deux</span></td></tr>
+      <tr><td>Screen Of Intruder</td><td><span data-lang="en">User service <code>usb-capture.service</code> checks every second; screen locked and key unplugged: webcam picture in <code>~/Images/Intruder_Picture</code> (fswebcam, limited number kept)</span><span data-lang="fr">Service utilisateur <code>usb-capture.service</code> qui vérifie chaque seconde ; écran verrouillé et clé débranchée : photo webcam dans <code>~/Images/Intruder_Picture</code> (fswebcam, nombre limité conservé)</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><p><span data-lang="en">Pam Usb is only enabled when <code>pam_usb.so</code> is installed with all its libraries, so a broken build cannot lock you out.</span><span data-lang="fr">Pam Usb n'est activé que si <code>pam_usb.so</code> est installé avec toutes ses bibliothèques, un build cassé ne peut donc pas vous bloquer.</span></p></div>
+</section>
+
+<!-- 6 -->
+<section id="ai">
+  <h2><span data-lang="en">6. AI and ai-utils</span><span data-lang="fr">6. IA et ai-utils</span></h2>
+  <p><span data-lang="en">The AI and Custom Package setups call <code>ai_utils_setup</code>, which runs the <code>setup.sh</code> of the <a href="https://github.com/TsukiNi22/ai-utils">ai-utils</a> repository: the local clone (<code>~/personal_delivery/other/ai-utils</code>, made by the Git setup) when present, else the script downloaded from GitHub.</span><span data-lang="fr">Les setups AI et Custom Package appellent <code>ai_utils_setup</code>, qui lance le <code>setup.sh</code> du dépôt <a href="https://github.com/TsukiNi22/ai-utils">ai-utils</a> : le clone local (<code>~/personal_delivery/other/ai-utils</code>, fait par le setup Git) s'il existe, sinon le script téléchargé depuis GitHub.</span></p>
+<pre data-title="ai_utils_setup"><code>ai_utils_setup install            # every skill + their tools
+ai_utils_setup install xstyle     # the xstyle checker only
+ai_utils_setup context install    # CLAUDE.md, RTK.md, hooks, rtk</code></pre>
+</section>
+
+<!-- 7 -->
+<section id="distros">
+  <h2><span data-lang="en">7. Distributions</span><span data-lang="fr">7. Distributions</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span data-lang="en">Family</span><span data-lang="fr">Famille</span></th><th><span data-lang="en">Distributions</span><span data-lang="fr">Distributions</span></th><th><span data-lang="en">Packages</span><span data-lang="fr">Paquets</span></th></tr></thead>
+    <tbody>
+      <tr><td>fedora-like</td><td>Fedora, RHEL, CentOS, Rocky, Alma</td><td><code>dnf</code></td></tr>
+      <tr><td>debian-like</td><td>Debian, Ubuntu, Mint, Pop!_OS</td><td><code>apt</code></td></tr>
+      <tr><td>arch-like</td><td>Arch, Manjaro, EndeavourOS</td><td><code>pacman</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><span data-lang="en">Tools missing from a distribution are installed another way: gum from the Charm repository, asciiquarium from its sources, libutils built from sources on arch.</span><span data-lang="fr">Les outils absents d'une distribution sont installés autrement : gum depuis le dépôt Charm, asciiquarium depuis ses sources, libutils compilé depuis les sources sur arch.</span></p></div>
+</section>
+
+<nav class="pager" aria-label="Pages">
+  <a class="prev" href="index.html"><span data-i18n>Previous</span><b data-i18n>Guide</b></a>
+  <a class="next" href="graph.html"><span data-i18n>Next</span><b data-i18n>Graph</b></a>
+</nav>
+</main>
+</div>
+<footer class="site"><span data-lang="en"><span class="repo-name">dump_script</span> documentation · generated from the <a class="repo-link" href="https://github.com/TsukiNi22/dump_script">repository</a> (<span class="repo-version">main</span>, <span class="repo-license">MIT</span>)</span><span data-lang="fr">Documentation de <span class="repo-name">dump_script</span> · générée depuis le <a class="repo-link" href="https://github.com/TsukiNi22/dump_script">dépôt</a> (<span class="repo-version">main</span>, <span class="repo-license">MIT</span>)</span></footer>
+<script>
+// French texts of the page (English text -> French text), extend it with the page content
+window.DOC_FR = {
+  "Guide": "Guide",
+  "Technical": "Technique",
+  "Graph": "Graphe",
+  "GitHub repository": "Dépôt GitHub",
+  "Toggle theme": "Changer de thème",
+  "Contents": "Sommaire",
+  "Language": "Langue",
+  "Pages": "Pages",
+  "Copy": "Copier",
+  "Copied": "Copié",
+  "Select & copy": "Sélectionner et copier",
+  "Link to this section": "Lien vers cette section",
+  "Navigation": "Navigation",
+  "Open the navigation": "Ouvrir la navigation",
+  "User guide": "Guide utilisateur",
+  "Developer guide": "Guide développeur",
+  "Technical documentation": "Documentation technique",
+  "Previous": "Précédent",
+  "Next": "Suivant"
+};
+</script>
+<script>
+// Language (English by default, French on demand): [data-i18n] elements and [data-i18n-<attr>] attributes are
+// translated with window.DOC_FR (English text -> French text), [data-lang] blocks are shown for their language only.
+(function () {
+  var root = document.documentElement;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-lang';
+  var FR = window.DOC_FR || {};
+  var listeners = [];
+  function tr(s) { return root.lang === 'fr' && Object.prototype.hasOwnProperty.call(FR, s) ? FR[s] : s; }
+  function apply() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      if (el.dataset.i18nEn === undefined) el.dataset.i18nEn = el.innerHTML.trim();
+      el.innerHTML = tr(el.dataset.i18nEn);
+    });
+    ['aria-label', 'title', 'placeholder'].forEach(function (attr) {
+      document.querySelectorAll('[data-i18n-' + attr + ']').forEach(function (el) {
+        var store = 'i18nEn' + attr.replace(/-(\w)/g, function (m, c) { return c.toUpperCase(); });
+        if (el.dataset[store] === undefined) el.dataset[store] = el.getAttribute(attr) || '';
+        el.setAttribute(attr, tr(el.dataset[store]));
+      });
+    });
+    document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.setLang === root.lang);
+      b.setAttribute('aria-pressed', b.dataset.setLang === root.lang ? 'true' : 'false');
+    });
+  }
+  function set(lang) {
+    root.lang = lang === 'fr' ? 'fr' : 'en';
+    try { localStorage.setItem(key, root.lang); } catch (e) { /* storage unavailable */ }
+    apply();
+    listeners.forEach(function (f) { f(root.lang); });
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(key); } catch (e) { /* storage unavailable */ }
+  // Choice carried by a link of the site (?lang=): pages opened from file:// don't share their storage
+  var askedLang = new URLSearchParams(location.search).get('lang');
+  if (askedLang === 'en' || askedLang === 'fr') { saved = askedLang; try { localStorage.setItem(key, askedLang); } catch (e) { /* storage unavailable */ } }
+  root.lang = saved === 'fr' ? 'fr' : 'en';
+  window.docI18n = { tr: tr, set: set, onChange: function (f) { listeners.push(f); }, lang: function () { return root.lang; } };
+  document.querySelectorAll('[data-set-lang]').forEach(function (b) {
+    b.addEventListener('click', function () { set(b.dataset.setLang); });
+  });
+  apply();
+})();
+</script>
+<script>
+// Project data from the linked GitHub repository (<html data-repo="owner/repo">): name, latest version, license and
+// URL are fetched (cached 1 h) and replace the written values in .repo-name / .repo-version / .repo-license /
+// .repo-link and in the page title. Offline, private repository or API limit: the written values stay.
+(function () {
+  var root = document.documentElement, repo = root.getAttribute('data-repo') || '';
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-repo', TTL = 3600 * 1000;
+  function apply(info) {
+    if (!info) return;
+    var oldName = (document.querySelector('.repo-name') || {}).textContent;
+    if (info.name) document.querySelectorAll('.repo-name').forEach(function (e) { e.textContent = info.name; });
+    if (info.version) document.querySelectorAll('.repo-version').forEach(function (e) { e.textContent = info.version; });
+    if (info.license) document.querySelectorAll('.repo-license').forEach(function (e) { e.textContent = info.license; });
+    if (info.url) document.querySelectorAll('a.repo-link').forEach(function (e) { e.href = info.url; });
+    if (info.name && oldName && document.title.indexOf(oldName) === 0) document.title = info.name + document.title.slice(oldName.length);
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* storage unavailable */ }
+  if (cached && cached.repo === repo) apply(cached);
+  // A language change rewrites the translated texts from their original: apply the fetched data again
+  if (window.docI18n) window.docI18n.onChange(function () { var c = null; try { c = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* storage unavailable */ } apply(window.docRepoInfo || c); });
+  if (cached && cached.repo === repo && Date.now() - cached.time < TTL) return;
+  var api = 'https://api.github.com/repos/' + repo;
+  var get = function (u) { return fetch(u, { headers: { Accept: 'application/vnd.github+json' } }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); };
+  get(api).then(function (r) {
+    var info = { repo: repo, time: Date.now(), name: r.name, url: r.html_url, license: r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION' ? r.license.spdx_id : '' };
+    return get(api + '/releases/latest').then(function (rel) { info.version = rel.tag_name; return info; })
+      .catch(function () { return get(api + '/tags?per_page=1').then(function (tags) { if (tags[0]) info.version = tags[0].name; return info; }); })
+      .catch(function () { return info; });
+  }).then(function (info) {
+    window.docRepoInfo = info;
+    apply(info);
+    try { localStorage.setItem(key, JSON.stringify(info)); } catch (e) { /* storage unavailable */ }
+  }).catch(function () { /* keep the written values */ });
+})();
+</script>
+<script>
+(function () {
+  var root = document.documentElement;
+  var key = (root.getAttribute('data-storage-key') || 'doc') + '-theme';
+  var btn = document.getElementById('themeToggle');
+  try { var saved = localStorage.getItem(key); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  var askedTheme = new URLSearchParams(location.search).get('theme'); // carried by a link of the site
+  if (askedTheme === 'dark' || askedTheme === 'light') { root.setAttribute('data-theme', askedTheme); try { localStorage.setItem(key, askedTheme); } catch (e) { /* storage unavailable */ } }
+  function isDark() {
+    return root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  btn.setAttribute('aria-checked', isDark() ? 'true' : 'false');
+  btn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    btn.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false');
+    try { localStorage.setItem(key, next); } catch (e) {}
+  });
+
+  // Highlight the section visible in the summary
+  var links = document.querySelectorAll('.sidebar a[href^="#"]');
+  if (!('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id); });
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('main section[id]').forEach(function (s) { observer.observe(s); });
+})();
+
+// Hide the tabs of the pages that don't exist, and the whole bar when a single page remains
+// (online: HEAD request; file://: the page is loaded as a hidden script, a missing file fails to load)
+(function () {
+  var nav = document.querySelector('nav.tabs');
+  if (!nav) return;
+  function done(a, ok) {
+    if (!ok) a.remove();
+    if (nav.querySelectorAll('a').length < 2) nav.hidden = true;
+  }
+  nav.querySelectorAll('a:not(.current)').forEach(function (a) {
+    if (/^https?:$/.test(location.protocol)) {
+      fetch(a.href, { method: 'HEAD' }).then(function (r) { done(a, r.ok); }).catch(function () {});
+      return;
+    }
+    var s = document.createElement('script');
+    var mute = function (e) { if (e.filename === s.src) { e.preventDefault(); e.stopImmediatePropagation(); } }; // an HTML page is not JS
+    window.addEventListener('error', mute, true);
+    s.src = a.href;
+    s.onload = function () { window.removeEventListener('error', mute, true); s.remove(); done(a, true); };
+    s.onerror = function () { window.removeEventListener('error', mute, true); s.remove(); done(a, false); };
+    document.head.appendChild(s);
+  });
+  if (nav.querySelectorAll('a').length < 2) nav.hidden = true;
+})();
+
+// Sidebar (mobile), copy buttons, heading anchors, content tabs
+(function () {
+  var tr = function (s) { return window.docI18n ? window.docI18n.tr(s) : s; };
+  var menu = document.getElementById('menuBtn'), side = document.getElementById('sidebar');
+  if (menu && side) {
+    menu.addEventListener('click', function () { side.classList.toggle('open'); });
+    document.addEventListener('click', function (e) { if (!side.contains(e.target) && !menu.contains(e.target)) side.classList.remove('open'); });
+  }
+  document.querySelectorAll('main pre').forEach(function (pre) {
+    if (pre.dataset.nocopy !== undefined) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = tr('Copy');
+    b.addEventListener('click', function () {
+      var code = pre.querySelector('code') || pre;
+      var done = function () { b.textContent = tr('Copied'); setTimeout(function () { b.textContent = tr('Copy'); }, 1400); };
+      if (navigator.clipboard) navigator.clipboard.writeText(code.innerText).then(done, function () { b.textContent = tr('Select & copy'); });
+      else b.textContent = tr('Select & copy');
+    });
+    pre.appendChild(b);
+  });
+  document.querySelectorAll('main h2[id], main h3[id], main section[id] > h2').forEach(function (h) {
+    var id = h.id || h.parentElement.id;
+    if (!id || h.querySelector('.anchor')) return;
+    var a = document.createElement('a');
+    a.className = 'anchor'; a.href = '#' + id; a.textContent = '#';
+    a.setAttribute('aria-label', tr('Link to this section'));
+    h.appendChild(a);
+  });
+  document.querySelectorAll('.ctabs').forEach(function (bar) {
+    var group = bar.dataset.tabs;
+    var buttons = bar.querySelectorAll('button');
+    var panels = document.querySelectorAll('.ctab-panel[data-tabs="' + group + '"]');
+    function show(name) {
+      buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+      panels.forEach(function (p) { p.classList.toggle('active', p.dataset.tab === name); });
+    }
+    buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+    if (buttons.length) show(buttons[0].dataset.tab);
+  });
+  if (window.docI18n) window.docI18n.onChange(function () {
+    document.querySelectorAll('main pre .copy').forEach(function (b) { b.textContent = tr('Copy'); });
+    document.querySelectorAll('.anchor').forEach(function (a) { a.setAttribute('aria-label', tr('Link to this section')); });
+  });
+})();
+</script>
+<script>
+// Links between the pages of the site carry the language, theme and level (?lang=fr&theme=dark&level=technical):
+// the choice applies to every page, also from file:// where each page has its own storage
+(function () {
+  var root = document.documentElement;
+  function carry(e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank') return;
+    var href = a.getAttribute('href');
+    if (!/^[^:?#\/]+\.html(#.*)?$/.test(href) && !/^\.\/[^:?#\/]+\.html(#.*)?$/.test(href)) return; // pages of the same folder only
+    var u = new URL(a.href);
+    u.searchParams.set('lang', root.lang || 'en');
+    if (root.getAttribute('data-theme')) u.searchParams.set('theme', root.getAttribute('data-theme'));
+    if (root.getAttribute('data-level')) u.searchParams.set('level', root.getAttribute('data-level'));
+    a.href = u.href;
+  }
+  document.addEventListener('click', carry, true);
+  document.addEventListener('auxclick', carry, true);
+})();
+</script>
+</body>
+</html>
