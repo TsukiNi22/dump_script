@@ -19,12 +19,12 @@
 
 Clone the repository:
 ```bash
-git clone https://github.com/TsukiNi22/dump-script.git ~/dump_script
+git clone https://github.com/TsukiNi22/dump.git ~/dump
 ```
 
 Launch the installation:
 ```bash
-cd ~/dump_script
+cd ~/dump
 sudo make
 ```
 

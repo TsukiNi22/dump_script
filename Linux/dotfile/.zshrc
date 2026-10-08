@@ -29,7 +29,7 @@ source $ZSH/oh-my-zsh.sh
 alias edit='v ~/.zshrc && upd'
 alias upd='source ~/.zshrc'
 
-alias dump='\sudo make -C ~/dump_script'
+alias dump='\sudo make -C ~/dump'
 
 alias lock='echo bruh!!!; loginctl lock-session;'
 
