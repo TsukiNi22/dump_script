@@ -132,15 +132,15 @@ clone_repo() {
 }
 
 CHOICES=$(ask_choose --multi "Repositories to clone:" \
-    "libutils" "skills" "cpp_project_template" "docker-image" "Other links") || CHOICES=""
+    "libutils" "ai-utils" "cpp_project_template" "docker-image" "Other links") || CHOICES=""
 mapfile -t SELECTED <<< "$CHOICES"
 status=0
 for choice in "${SELECTED[@]}"; do
     case "$choice" in
         "libutils"|"cpp_project_template")
             clone_repo "https://github.com/$GITHUB_USER/$choice.git" "$USER_HOME/personal_delivery/cpp/$choice" || status=1 ;;
-        "skills")
-            clone_repo "https://github.com/$GITHUB_USER/skills.git" "$SKILLS_DIR" || status=1 ;;
+        "ai-utils")
+            clone_repo "https://github.com/$GITHUB_USER/ai-utils.git" "$AI_UTILS_DIR" || status=1 ;;
         "docker-image")
             clone_repo "https://github.com/$GITHUB_USER/docker-image.git" "$USER_HOME/personal_delivery/other/docker-image" \
                 || status=1 ;;

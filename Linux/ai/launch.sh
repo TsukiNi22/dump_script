@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage: sudo bash ai/launch.sh
-# Install the AI tools: Claude Code, Ollama, the skills (+ their tools) and the global context of the skills repository
+# Install the AI tools: Claude Code, Ollama, the skills (+ their tools) and the global context of the ai-utils repository
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,12 +31,12 @@ setup_ollama() {
 
 # Every skill in ~/.claude/skills and the tools in ~/.local/bin
 setup_skills() {
-    skills_setup install
+    ai_utils_setup install
 }
 
-# CLAUDE.md, RTK.md, hooks and rtk (branch 'context' of the skills repository)
+# CLAUDE.md, RTK.md, hooks and rtk (branch 'context' of the ai-utils repository)
 setup_context() {
-    skills_setup context install
+    ai_utils_setup context install
 }
 
 # =========================

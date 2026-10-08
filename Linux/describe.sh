@@ -109,7 +109,7 @@ format() {
             echo "Choose one or both:"
             echo "  - libutils: TsukiNi22 rpm / deb mirror (built from the sources on arch),"
             echo "    every build (optimized, debug, asan + headers)"
-            echo "  - xstyle: coding style checker, built from the skills repository into ~/.local/bin"
+            echo "  - xstyle: coding style checker, built from the ai-utils repository into ~/.local/bin"
             note "xstyle needs libutils: select both on a fresh machine"
             ;;
         "AI")
@@ -131,7 +131,7 @@ format() {
             echo "    (mlkem768x25519 / sntrup761x25519), key kept in the agent after the first unlock"
             echo "  - clone (https, push with ssh) any of:"
             echo "      libutils, cpp_project_template -> ~/personal_delivery/cpp/"
-            echo "      skills, docker-image -> ~/personal_delivery/other/"
+            echo "      ai-utils, docker-image -> ~/personal_delivery/other/"
             echo "      other links (one per line) -> chosen folder"
             ;;
         "Grub & Plymouth")

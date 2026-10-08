@@ -442,12 +442,12 @@ escape_sed() {
     printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
 }
 
-# Run the setup.sh of the skills repository as the user (local clone of the Git setup, managed clone otherwise)
-skills_setup() {
-    if [[ -f "$SKILLS_DIR/setup.sh" ]]; then
-        run_as_user bash "$SKILLS_DIR/setup.sh" "$@"
+# Run the setup.sh of the ai-utils repository as the user (local clone of the Git setup, managed clone otherwise)
+ai_utils_setup() {
+    if [[ -f "$AI_UTILS_DIR/setup.sh" ]]; then
+        run_as_user bash "$AI_UTILS_DIR/setup.sh" "$@"
     else
-        run_as_user bash -c 'curl -fsSL "$0" | bash -s -- "$@"' "$SKILLS_SETUP_URL" "$@"
+        run_as_user bash -c 'curl -fsSL "$0" | bash -s -- "$@"' "$AI_UTILS_SETUP_URL" "$@"
     fi
 }
 
@@ -491,7 +491,7 @@ USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 # Repositories
 # =========================
 GITHUB_USER="TsukiNi22"
-SKILLS_DIR="$USER_HOME/personal_delivery/other/skills" # Clone of the Git setup (base repositories)
+AI_UTILS_DIR="$USER_HOME/personal_delivery/other/ai-utils" # Clone of the Git setup (base repositories)
 CHARM_KEY_URL="https://repo.charm.sh/apt/gpg.key"
 CHARM_REPO_URL="https://repo.charm.sh/apt/"
-SKILLS_SETUP_URL="https://raw.githubusercontent.com/$GITHUB_USER/skills/main/setup.sh"
+AI_UTILS_SETUP_URL="https://raw.githubusercontent.com/$GITHUB_USER/ai-utils/main/setup.sh"

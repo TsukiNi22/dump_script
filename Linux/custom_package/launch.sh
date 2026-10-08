@@ -1,7 +1,7 @@
 #!/bin/bash
 # Usage: sudo bash custom_package/launch.sh
 # Install the custom packages & binaries: libutils (rpm / deb mirror, built from the sources on arch)
-# and xstyle (built from the skills repository)
+# and xstyle (built from the ai-utils repository)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -55,7 +55,7 @@ setup_libutils() {
 }
 
 setup_xstyle() {
-    skills_setup install xstyle
+    ai_utils_setup install xstyle
 }
 
 # =========================

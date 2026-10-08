@@ -63,15 +63,15 @@ sudo make
 | Name | Content |
 | ---- | ------- |
 | [`libutils`](https://github.com/TsukiNi22/libutils) | TsukiNi22 rpm / deb mirror (built from the sources on arch), every build (optimized, debug, asan + headers) |
-| `xstyle` | Coding style checker of the [skills](https://github.com/TsukiNi22/skills) repository (`~/.local/bin`) |
+| `xstyle` | Coding style checker of the [ai-utils](https://github.com/TsukiNi22/ai-utils) repository (`~/.local/bin`) |
 
 ### AI
 | Name | Content |
 | ---- | ------- |
 | `Claude Code` | Native installer (`~/.local/bin/claude`) |
 | `Ollama` | Official installer (`/usr/local/bin/ollama`, `ollama.service`) |
-| `Skills` | Every skill of the [skills](https://github.com/TsukiNi22/skills) repository in `~/.claude/skills` + their tools |
-| `Skills context` | `CLAUDE.md`, `RTK.md`, hooks and `rtk` (branch `context` of the skills repository) |
+| `Skills` | Every skill of the [ai-utils](https://github.com/TsukiNi22/ai-utils) repository in `~/.claude/skills` + their tools |
+| `Skills context` | `CLAUDE.md`, `RTK.md`, hooks and `rtk` (branch `context` of the ai-utils repository) |
 
 ### Git
 Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then clone (https, push with ssh) any of:
@@ -85,7 +85,7 @@ Git user config, `~/delivery` & `~/personal_delivery`, `~/.ssh/git` key, then cl
 | Repository | Folder |
 | ---------- | ------ |
 | `libutils`, `cpp_project_template` | `~/personal_delivery/cpp/` |
-| `skills` | `~/personal_delivery/other/skills` (used by the Custom Package & AI setups) |
+| `ai-utils` | `~/personal_delivery/other/ai-utils` (used by the Custom Package & AI setups) |
 | `docker-image` | `~/personal_delivery/other/docker-image` |
 | Other links (one per line) | Chosen folder (default: `~/personal_delivery`) |
 
